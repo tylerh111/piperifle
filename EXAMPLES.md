@@ -9,6 +9,15 @@ Pipe()
 
 // >-o-x
 //   |
+//   +-x
+Pipe()
+    < Source()
+    | Transform()
+    | Sink()
+    | Sink()
+
+// >-o-x
+//   |
 // >-+
 Pipe()
     < Source()
