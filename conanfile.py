@@ -21,12 +21,16 @@ class piperifleConan(ConanFile):
         "build_type",
         "arch",
     ]
+    generators = [
+        # "MesonToolchain", # included by default
+        "PkgConfigDeps",
+    ]
     options = {
         "shared": [True, False],
         "fPIC": [True, False],
     }
     default_options = {
-        "shared": False,
+        "shared": True,
         "fPIC": True,
     }
     exports_sources = [
