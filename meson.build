@@ -7,8 +7,10 @@ project(
 )
 
 # options
-cpp_std='c++23'
+cpp_std='c++11'
 default_library = 'both'
+
+message('::DEBUG:: ', cpp_std)
 
 # dependencies
 boost = dependency('boost')
