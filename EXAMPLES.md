@@ -40,3 +40,26 @@ Pipe()
 
 
 
+
+```c++
+int main() {
+
+    p = piperifle::Pipeline();
+
+    p
+        .add_source(piperifle::Source(...))
+        .add_transformation([](piperifle::Container& c) { ... })
+        .add_transformation([](piperifle::Container& c) { ... })
+        .add_sink(piperifle::Sink(...))
+        ;
+
+    p.run(<....>)
+
+
+
+}
+
+
+```
+
+

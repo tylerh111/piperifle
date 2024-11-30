@@ -1,42 +1,23 @@
 project(
     'piperifle',
     'cpp',
-    version: '0.0',
+    version : '0.0',
     license: 'MIT',
-    license_files: 'LICENSE.md',
-)
-
-# options
-cpp_std='c++11'
-default_library = 'both'
-
-message('::DEBUG:: ', cpp_std)
-
-# dependencies
-boost = dependency('boost')
-
-# targets
-
-piperifle_inc = include_directories('src')
-
-piperifle = library(
-    'piperifle',
-    'src/piperifle.cpp',
-    # 'src/piperifle/pipe.cpp',
-    install: true,
-    include_directories: piperifle_inc,
-    dependencies: [
-        boost,
+    default_options : [
+        'warning_level=3',
+        'cpp_std=c++23'
     ],
 )
 
-install_headers('src/piperifle.hpp')
+subdir('sources')
+subdir('tests')
 
-executable(
-    'piperifle_test',
-    'src/main.cpp',
-    include_directories: piperifle_inc,
-    link_with: [
-        piperifle,
-    ],
+pkg_mod = import('pkgconfig')
+pkg_mod.generate(
+    name: 'piperifle',
+    filebase: 'piperifle',
+    description: 'Fast data piping',
+    subdirs: 'piperifle',
+    libraries: libpiperifle,
+    version: meson.project_version(),
 )
