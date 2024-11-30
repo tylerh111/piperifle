@@ -1,9 +1,0 @@
-{
-  "name": "piperifle",
-  "version": "0.0",
-  "licence": "MIT",
-  "description": "Fast Data Plumbing",
-  "dependencies": [
-    "boost-test"
-  ]
-}
