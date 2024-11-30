@@ -10,6 +10,7 @@ project(
 )
 
 subdir('src')
+subdir('tests')
 
 pkg_mod = import('pkgconfig')
 pkg_mod.generate(
