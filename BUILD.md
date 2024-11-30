@@ -1,43 +1,21 @@
-# Piperifle Build Meson+Conan
+# Piperifle Build
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-source .venv/bin/activate # if using fish shell
+meson setup      build --reconfigure
+meson compile -C build -j4
+meson test    -C build
+meson dist    -C build
 
-# build with conan
-pip install conan
-conan profile detect
-conan install . --output-folder build --build missing --profile conanprofile.ini
-conan build   . --output-folder build --build missing --profile conanprofile.ini
+# or (worse)
 
-# build with meson
-pip install meson
-meson setup      build .
-meson compile -C build
+mkdir build
+cd build
 
-# build wiht meson (using conan deps)
-pip install conan meson
-conan profile detect
-conan install . --output-file build --build missing --profile conanprofile.ini
-source      build/build-release/conan/conanbuild.sh
-bass source build/build-release/conan/conanbuild.sh # if using fish shell
-meson setup      build .
-meson compile -C build
-source      build/build-release/conan/deactivate_conanbuild.sh
-bass source build/build-release/conan/deactivate_conanbuild.sh # if using fish shell
-
+meson setup . .. --reconfigure
+meson compile
+meson test
+meson dist
 ```
 
 
-# Piperifle Build Meson+Vcpkg
-
-```bash
-
-vcpkg new --name piperifle --version 0.0
-vcpkg add port boost-test
-
-
-...
-```
 
