@@ -1,0 +1,10 @@
+#ifndef PIPERIFLE_HPP_
+#define PIPERIFLE_HPP_
+
+#mesondefine PIPERIFLE_VERSION
+#mesondefine PIPERIFLE_VERSION_MAJOR
+#mesondefine PIPERIFLE_VERSION_MINOR
+#mesondefine PIPERIFLE_VERSION_PATCH
+#mesondefine PIPERIFLE_VERSION_TAG
+
+#endif  // PIPERIFLE_HPP_
