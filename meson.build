@@ -16,7 +16,7 @@ pkg_mod = import('pkgconfig')
 pkg_mod.generate(
     name: 'piperifle',
     filebase: 'piperifle',
-    description: 'Fast data piping',
+    description: 'Fast Data Plumbing',
     subdirs: 'piperifle',
     libraries: libpiperifle,
     version: meson.project_version(),

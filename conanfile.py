@@ -8,7 +8,7 @@ class piperifleConan(ConanFile):
     # project
     name = "piperifle"
     version = "0.0"
-    description = "Data Plumbing Library"
+    description = "Fast Data Plumbing"
     license = "MIT"
     url = "https://github.com/tylerh111/piperifle"
     package_type = "library"
