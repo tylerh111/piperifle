@@ -6,14 +6,14 @@
 #include <piperifle/node.hpp>
 
 namespace piperifle {
-inline namespace v1 {
+inline namespace v0 {
 
 struct Sink
     : public Node
 {
 };
 
-} // namespace v1
+} // namespace v0
 } // namespace piperifle
 
 #endif  // PIPERIFLE_SINK_HPP_

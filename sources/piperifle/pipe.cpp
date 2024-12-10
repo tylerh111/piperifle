@@ -4,7 +4,7 @@
 #include <piperifle/pipe.hpp>
 
 namespace piperifle {
-namespace v1 {
+namespace v0 {
 
 auto Pipe::feed(this Pipe& self) -> std::vector<Node>
 {
@@ -62,6 +62,6 @@ auto Pipe::operator>>(this Pipe& self, Node&& node) -> Pipe&
 
 
 
-} // namespace v1
+} // namespace v0
 } // namespace piperifle
 

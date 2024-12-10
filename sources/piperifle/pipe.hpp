@@ -7,7 +7,7 @@
 #include <piperifle/node.hpp>
 
 namespace piperifle {
-inline namespace v1 {
+inline namespace v0 {
 
 class Pipe {
 public:
@@ -29,7 +29,7 @@ private:
     std::vector<Node> nodes;
 };
 
-} // namespace v1
+} // namespace v0
 } // namespace piperifle
 
 

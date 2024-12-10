@@ -5,14 +5,14 @@
 #include <string>
 
 namespace piperifle {
-inline namespace v1 {
+inline namespace v0 {
 
 struct Node
 {
     std::string id;
 };
 
-} // namespace v1
+} // namespace v0
 } // namespace piperifle
 
 
