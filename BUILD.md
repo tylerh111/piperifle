@@ -1,10 +1,10 @@
 # Piperifle Build
 
 ```bash
-meson setup      build --reconfigure
-meson compile -C build -j4
-meson test    -C build
-meson dist    -C build
+CXX=clang++ meson setup      build --reconfigure
+CXX=clang++ meson compile -C build -j4
+CXX=clang++ meson test    -C build
+CXX=clang++ meson dist    -C build
 
 # or (worse)
 
