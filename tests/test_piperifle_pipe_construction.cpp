@@ -10,13 +10,25 @@
 
 BOOST_AUTO_TEST_CASE(test_piperifle_pipe_construction1)
 {
-    piperifle::Pipe p;
-    p.connect(piperifle::Source{"source"});
-    p.connect(piperifle::Transform{"transform"});
-    p.connect(piperifle::Sink{"sink"});
+    auto p = piperifle::pipeline{};
+        |= [] (int x) {
+            std::println("transformation {}", x);
+            x += 1;
+            std::println("transformation {} (done)", x);
+            return x;
+        }
+        ;
 
-    auto nodes = p.feed();
-    BOOST_CHECK(nodes.at(0).id == "source");
-    BOOST_CHECK(nodes.at(1).id == "transform");
-    BOOST_CHECK(nodes.at(2).id == "sink");
+    piperifle::feed(p, 1);
+
 }
+
+// BOOST_AUTO_TEST_CASE(test_piperifle_pipe_construction2)
+// {
+//     auto p = piperifle::pipeline{};
+//         |= [] () { int x = 0; std::println("{} piping", x); return x; }
+//         |= [] (int x) { x += 1; std::println("{} piping", x); return x; }
+//         |= [] (int x) { std::println("{} piping (done)", x); }
+//         ;
+
+// }
