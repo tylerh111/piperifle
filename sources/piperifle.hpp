@@ -5,18 +5,11 @@
 #include <tuple>
 #include <type_traits>
 #include <utility>
+#include <variant>
 #include <vector>
 
 
 namespace piperifle {
-
-// template <typename Results, typename... Params>
-// struct node {
-//     std::string id;
-//     std::function<Result (Params...)> op;
-//     std::vector<node*> prev;
-//     // std::vector<node*> next;
-// };
 
 // struct source : node {};
 // struct transformation : node {};
@@ -31,25 +24,43 @@ namespace piperifle {
 // using toggler = toggle;
 
 
-struct node {
-    virtual ~node() = default;
+struct data {
 
-    template <typename Result, typename... Params>
-    auto operator() (this auto&& self, Params&&... params) -> Result {
-        if constexpr (std::is_void_v<Result>)
-            self(std::forward<Params>(params)...);
-        else
-            return self(std::forward<Params>(params)...);
-    }
-};
+}
 
-template <typename Result, typename... Params>
-struct transformation : node
+
+struct transformation
 {
-    using result_t = Result;
-    using parameters_t = std::tuple<Params...>;
-    virtual auto operator() (this transformation&, Params&&...) -> Result = 0;
 };
+
+
+
+
+struct node {
+
+    template <typename F, typename R, typename... Args>
+    struct node_model {
+
+    };
+
+    template <typename F, typename R, typename... Args>
+    node(std::callable F&& f)
+        :
+
+
+    template <typename R, typename... Args>
+    auto operator() (this node& self, Args&&... params) -> R {
+        template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+        std::visit(
+            overloaded{
+                [=] (transformation<R, Args...>& op) -> R { return op(std::forward<Args>(params)...); },
+            },
+            self.var
+        )
+    }
+
+};
+
 
 
 struct pipeline {
@@ -61,7 +72,7 @@ struct pipeline {
     template <typename Other>
     auto connect(this pipeline& self, Other&& other) -> pipeline&
     {
-        nodes_.emplace_back(std::move(other));
+        nodes_.emplace_back(/* ... */); // store other some how via a conversion to node
     }
 
     inline auto operator|= (this pipeline& self, auto&& other) -> pipeline&

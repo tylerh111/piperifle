@@ -10,7 +10,7 @@
 
 BOOST_AUTO_TEST_CASE(test_piperifle_pipe_construction1)
 {
-    auto p = piperifle::pipeline{};
+    auto p = piperifle::pipeline{}
         |= [] (int x) {
             std::println("transformation {}", x);
             x += 1;
@@ -18,8 +18,6 @@ BOOST_AUTO_TEST_CASE(test_piperifle_pipe_construction1)
             return x;
         }
         ;
-
-    piperifle::feed(p, 1);
 
 }
 

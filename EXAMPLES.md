@@ -459,4 +459,74 @@ p = pipeline
     |= ...
 ```
 
+---
+
+## Using type erasure for node
+
+see [Breaking Dependencies - C++ Type Erasure - The Implementation Details - Klaus Iglberger CppCon 2022](https://www.youtube.com/watch?v=qn6OqefuH08)
+see [Breaking Dependencies: Type Erasure - A Design Analysis - Klaus Iglberger - CppCon 2021](https://www.youtube.com/watch?v=4eeESJQk-mw)
+
+```c++
+class Shape {
+private:
+
+    struct ShapeConcept {
+        virtual ~ShapeConcept() = default;
+
+        virtual void serialize(/* ... */) const = 0;
+        virtual void draw(/* ... */) const = 0;
+        virtual std::unique_ptr<ShapeConcept> clone() const = 0;
+    };
+
+    template <typename T>
+    struct ShapeModel : ShapeConcept {
+        ShapeModel(T&& value) : object{std::forward<T>(value)} {}
+
+        void serialize(/* ... */) const override { serialize(object, /* ... */); }
+        void draw(/* ... */) const override { draw(object, /* ... */); }
+        std::unique_ptr<ShapeConcept> clone() const override { return std::make_unique<ShapeModel>(*this); };
+
+        T object;
+    };
+
+    friend void serialize(const Shape& s, /* ... */) { s.pimpl->serialize(/* ... */); }
+    friend void draw(const Shape& s, /* ... */) { s.pimpl->draw(/* ... */); }
+    friend unique_ptr<ShapeConcept> clone(const Shape& s, /* ... */) { return s.pimpl->clone(/* ... */); }
+
+    std::unique_ptr<ShapeConcept> pimpl;
+
+public:
+
+    template <typename T>
+    Shape(const T& x) : pimpl{new ShapeModel<T>(x)} {}
+
+    Shape(const Shape& s) :  pimpl{clone(s)} {}
+    Shape(Shape&& s) = default;
+    Shape& operator= (const Shape& s) { pimpl = clone(s); }
+    Shape& operator= (Shape&& s) = default;
+
+};
+
+int main() {
+    std::vector<Shape> shapes;
+    shapes.emplace_back(Circle{0.0});
+    shapes.emplace_back(Square{0.0});
+    shapes.emplace_back(Circle{0.0});
+
+    // draw all shapes
+    for (const auto& shape : shapes) {
+        draw(shape);
+    }
+}
+
+```
+
+
+
+----
+
+## A good place to start
+
+using `std::any`.
+create wrapper lambdas that call the connector object (e.g. the lambda the dev passes) and do the any casts there.
 
