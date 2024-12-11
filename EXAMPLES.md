@@ -376,3 +376,87 @@ p1 = pipeline
 ```
 
 
+---
+
+question: how do we do conditionals?
+answer: use `^=` which decides which branch (maybe?)
+
+for example:
+* choose branch 1 if the pipeline should: "continue doing normal things with the data"
+* choose branch 2 if the pipeline should: "the data should be sent to an external process"
+
+
+```c++
+p = pipeline
+    |= ...
+    |= transformation
+    ^= conditional // looks like: [](input, branch...) { return branch; }
+    &= (pipeline |= ...)
+    &= (pipeline |= ...)
+```
+
+question: what does piping after a branch mean?
+answer:
+
+```c++
+p = pipeline
+    |= ...
+    |= transformation
+    ^= conditional
+    &= (pipeline |= ...)
+    &= (pipeline |= ...)
+    |= transformation // looks like: [] (auto d) { if constexpr (std::is_same_v<d, int>) { ... } else { ... } }
+                      // or        : [] (variant d) { ... }
+```
+
+question: can we branch or diverge more than 2 ways
+answer: yes, use more `&=`, the conditional nodes will have more input parameters
+
+---
+
+question: can we dynamically alter the pipeline
+answer: yes (maybe), unknown if we should
+
+for example: if a piece of data indicates that another source should be turned on or swapped with another
+e.g. switch to reading a different channel
+
+another reason is if the transformation relies on the pipeline setup, e.g. knowing what comes next affects preparation
+however, this example isn't great because it would be better have another transformation that follows a branch before the next transformation
+
+```c++
+p = pipeline
+    |= ...
+
+    // normal transformation
+    |= [] (int x) { ... }
+
+    // pipeline transformation
+    |= [] (pipeline& p, node& n, int x) {
+        if (...) {
+            p.node(n)
+                |= transformation
+                |= transformation
+        }
+    }
+```
+
+---
+
+question: can we have a valve like operation that stops the flow of data at that point
+~answer: maybe use `~=` operator which is a pipe itself which can be toggled on and off (not specifying will allow free pass to the next pipeline)~
+
+cannot use `~=` operator, does not exist
+
+use `.disable()`
+
+
+```c++
+p = pipeline
+    |= ...
+    |= transformation
+    |= (~= transformation) // skipped, but can be enabled dynamically inside or outside the pipeline
+    |= transformation
+    |= ...
+```
+
+
