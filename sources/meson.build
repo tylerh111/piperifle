@@ -17,7 +17,6 @@ libpiperifle_inc = include_directories('.')
 
 libpiperifle = library(
     'piperifle',
-    'piperifle/pipe.cpp',
     include_directories: libpiperifle_inc,
     install: true,
 )
