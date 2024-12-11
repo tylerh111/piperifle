@@ -530,3 +530,83 @@ int main() {
 using `std::any`.
 create wrapper lambdas that call the connector object (e.g. the lambda the dev passes) and do the any casts there.
 
+
+---
+
+## based on senders and receivers?
+
+see [P2300r10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)
+
+
+specifically:
+
+```c++
+// the `values-sent-by(input)` can be a helper function of it's self
+// but it's a function of the input type.
+// so, we could do something like `typename input::result_t (typename input::arguments_t...)` (probably not, variadic using not allowed)
+// but something like this which can pass the information from the previous sender to the next function.
+
+execution::sender auto then(
+    execution::sender auto input,
+    std::invocable<values-sent-by(input)...> function
+);
+
+// ---
+
+auto snd0 = execution::schedule(thread_pool.scheduler());
+auto snd1 = execution::then(snd0, []{ return 123; });
+auto snd2 = execution::then(snd1, [](int i){ return 123 * 5; })
+auto snd3 = execution::then(snd2, [](int i){ return i - 5; });
+auto [result] = *this_thread::sync_wait(snd3);
+// result == 610
+
+// or
+
+auto snd = execution::schedule(thread_pool.scheduler())
+         | execution::then([]{ return 123; })
+         | execution::then([](int i){ return 123 * 5; })
+         | execution::then([](int i){ return i - 5; });
+auto [result] = this_thread::sync_wait(snd).value();
+// result == 610
+
+// ---
+// extrapolating from declaration
+// possible implementation could be
+// _something like this_
+// point is, the arguments from the previous sender (e.g. the input) can be used in the `std::invocable` concept
+// all compile time
+// this probably looses some invariability, i.e. no dynamic changes to the pipeline (which sucks...)
+
+// assume `Sender` implements the `sender` concept
+template <typename... Args>
+struct Sender { using arguments_t = std::tuple<Args...>; };
+
+sender auto then(
+    sender auto input,
+    std::invocable<typename decltype(input)::arguments_t...> function
+) {
+    ...
+    return Sender{function};
+}
+
+```
+
+for piperifle, we need to switch it up a bit
+
+```c++
+// pipeline is it's own type and provides builder types
+auto plumbing = piperifle::plumbing{};
+
+auto pipline = plumbing.pipeline();
+    | []{ return 0; }
+    | [] (int x) { return 3.14 + x; }
+    // | [] (std::string y) {...}  // would fail to compile
+    | [] (double x) { return ""; }
+    ...
+
+```
+
+the only way the original idea would work is if we specified the type ahead of time.
+that is, `piperifle::pipeline<X>` where `X` is the data being passed from one type to the next
+this could be `std::any` which gives us range, but there's still no way of having variadic number of arguments
+

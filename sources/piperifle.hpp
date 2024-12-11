@@ -1,6 +1,7 @@
 #ifndef PIPERIFLE_HPP_
 #define PIPERIFLE_HPP_
 
+#include <any>
 #include <functional>
 #include <tuple>
 #include <type_traits>
@@ -11,11 +12,14 @@
 
 namespace piperifle {
 
-// struct source : node {};
-// struct transformation : node {};
-// struct sink : node {};
-// struct effect : node {};
-// struct toggle : node {};
+template<typename... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+
+
+struct source         : std::function<std::any(void)> {};
+struct transformation : std::function<std::any(std::any)> {};
+struct sink           : std::function<void(std::any)> {};
+struct effect         : std::function<void(void)> {};
+// struct toggle         : std::function<std::any(std::any)> {};
 
 // using injector = source;
 // using reflector = transformation;
@@ -24,39 +28,41 @@ namespace piperifle {
 // using toggler = toggle;
 
 
-struct data {
-
-}
-
-
-struct transformation
-{
-};
-
+template <typename F, typename... Args>
+concept transformable =
+    std::invocable<F, Args...>
+    && requires(F&& f, Args&&... args) {
+        !std::is_void_v<decltype(f(std::forward<Args>(args)...))>;
+    };
 
 
 
 struct node {
 
-    template <typename F, typename R, typename... Args>
-    struct node_model {
+    using kinds = std::variant<transformation>;
 
-    };
+    kinds var_;
 
-    template <typename F, typename R, typename... Args>
-    node(std::callable F&& f)
-        :
-
+    template <typename F, typename... Args>
+    node(F&& f) requires transformable<F, Args...>
+        : var_{
+            transformation{
+                [f = std::move(f)] (std::any args_hidden) -> std::any {
+                    auto args = std::any_cast<std::tuple<Args...>>(args_hidden);
+                    return f(std::get<Args>(args)...);
+                }
+            }
+        }
+    {}
 
     template <typename R, typename... Args>
-    auto operator() (this node& self, Args&&... params) -> R {
-        template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
-        std::visit(
+    auto operator() (this node& self, Args&&... args) -> R {
+        return std::visit(
             overloaded{
-                [=] (transformation<R, Args...>& op) -> R { return op(std::forward<Args>(params)...); },
+                [...args = std::move(args)] (transformation& f) -> R { return f(std::forward<Args>(args)...); },
             },
-            self.var
-        )
+            self.var_
+        );
     }
 
 };
@@ -67,15 +73,12 @@ struct pipeline {
 
     pipeline() = default;
 
-    auto operator() ()
-
-    template <typename Other>
-    auto connect(this pipeline& self, Other&& other) -> pipeline&
+    auto connect(this auto&& self, auto&& other) -> pipeline&
     {
-        nodes_.emplace_back(/* ... */); // store other some how via a conversion to node
+        self.nodes_.emplace_back(node{std::forward<std::decay_t<decltype(other)>>(other)});
     }
 
-    inline auto operator|= (this pipeline& self, auto&& other) -> pipeline&
+    inline auto operator|= (this auto&& self, auto&& other) -> pipeline&
     {
         return self.connect(std::forward<std::decay_t<decltype(other)>>(other));
     }
@@ -118,10 +121,10 @@ struct pipeline {
 };
 
 
-template <typename T>
-auto feed(pipeline& p, T x) -> T {
+// template <typename T>
+// auto feed(pipeline& p, T x) -> T {
 
-}
+// }
 
 
 }  // namespace piperifle
