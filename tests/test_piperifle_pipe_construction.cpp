@@ -19,6 +19,7 @@ BOOST_AUTO_TEST_CASE(test_piperifle_pipe_construction1)
         }
         ;
 
+    piperifle::feed(p, 0);
 }
 
 // BOOST_AUTO_TEST_CASE(test_piperifle_pipe_construction2)

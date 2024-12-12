@@ -3,6 +3,7 @@
 
 #include <any>
 #include <functional>
+#include <source_location>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -15,10 +16,10 @@ namespace piperifle {
 template<typename... Ts> struct overloaded : Ts... { using Ts::operator()...; };
 
 
-struct source         : std::function<std::any(void)> {};
+// struct source         : std::function<std::any(void)> {};
 struct transformation : std::function<std::any(std::any)> {};
-struct sink           : std::function<void(std::any)> {};
-struct effect         : std::function<void(void)> {};
+// struct sink           : std::function<void(std::any)> {};
+// struct effect         : std::function<void(void)> {};
 // struct toggle         : std::function<std::any(std::any)> {};
 
 // using injector = source;
@@ -28,26 +29,12 @@ struct effect         : std::function<void(void)> {};
 // using toggler = toggle;
 
 
-template <typename FWrapper>
-concept transformable = requires {
-    requires !std::is_void_v<typename FWrapper::result>;
-    requires 0 < std::tuple_size_v<typename FWrapper::arguments>;
-};
-
 
 template <typename F>
 concept callable_with_info = requires {
     typename F::result;
     typename F::arguments;
 };
-
-
-// template <typename...>
-// struct function_with_callinfo
-// {
-//     // using result = void;
-//     using arguments = void;
-// };
 
 template <typename R, typename... Args>
 struct function_with_callinfo
@@ -57,12 +44,36 @@ struct function_with_callinfo
     using arguments = std::tuple<Args...>;
 };
 
-// template <typename R, typename... Args>
-// function_with_callinfo(std::function<R(Args...)>) -> function_with_callinfo<R, Args...>;
+
+struct pipeline_error : std::exception {
+    std::string msg;
+    pipeline_error(
+        std::string msg = "",
+        std::source_location loc = std::source_location::current())
+        : msg{
+            std::format("pipeline failed: {} | {}({},{}) {}",
+                msg,
+                loc.file_name(),
+                loc.line(),
+                loc.column(),
+                loc.function_name()
+            )
+        }
+    {
+
+    }
+
+    auto what() const noexcept -> const char* override {
+        return msg.c_str();
+    }
+};
 
 
-
-
+template <typename F>
+concept transformable = callable_with_info<F> && requires {
+    requires !std::is_void_v<typename F::result>;
+    requires 0 < std::tuple_size_v<typename F::arguments>;
+};
 
 struct node {
 
@@ -70,50 +81,36 @@ struct node {
 
     kinds var_;
 
-    // template <
-    //     typename F
-    //     // typename FWrapper = function_type_<
-    //     //     decltype(&std::decay_t<F>::operator())
-    //     // >
-    // >
-    // node(F&& f)
-    //     // requires transformable<function_type_<
-    //     //     decltype(&std::decay_t<F>::operator())
-    //     // >>
-    //     : var_{
-    //         transformation{
-    //             [f = std::move(f)] (std::any args_hidden) -> std::any
-    //             {
-    //                 using arguments = typename function_type_<decltype(&std::decay_t<F>::operator())>::arguments;
-    //                 auto args = std::any_cast<arguments>(args_hidden);
-    //                 return std::make_tuple(std::apply(f, args));
-    //             }
-    //         }
-    //     }
-    // {}
-
-    node(callable_with_info auto&& f)
+    node(transformable auto&& f)
         : var_{
             transformation{
                 [f = std::move(f)] (std::any args_hidden) -> std::any
                 {
-                    using arguments = typename decltype(f)::arguments;
-                    auto args = std::any_cast<arguments>(args_hidden);
-                    return std::make_tuple(std::apply(f, args));
+                    try {
+                        using arguments = typename decltype(f)::arguments;
+                        auto args = std::any_cast<arguments>(args_hidden);
+                        return std::make_tuple(std::apply(f, args));
+                    } catch (const std::bad_any_cast& e) {
+                        throw pipeline_error{e.what()};
+                    }
                 }
             }
         }
     {}
 
     template <typename R, typename... Args>
-    auto operator() (this node& self, Args&&... args) -> R {
+    auto call(this node& self, Args&&... args) -> R {
         return std::visit(
             overloaded{
-                [...args = std::move(args)] (transformation& f) -> R
+                [...args = std::move(args)] (transformation& f) mutable -> R
                 {
-                    return std::get<R>(
-                        std::any_cast<std::tuple<R>>(f(std::forward<Args>(args)...))
-                    );
+                    try {
+                        return std::get<R>(
+                            std::any_cast<std::tuple<R>>(f(std::make_tuple(std::forward<Args>(args)...)))
+                        );
+                    } catch (const std::bad_any_cast& e) {
+                        throw pipeline_error{e.what()};
+                    }
                 }
             },
             self.var_
@@ -130,7 +127,6 @@ struct pipeline {
 
     auto connect(this auto&& self, auto&& other) -> pipeline&
     {
-        // self.nodes_.emplace_back(node{std::forward<std::decay_t<decltype(other)>>(other)});
         self.nodes_.emplace_back(node{function_with_callinfo{std::function{other}}});
         return self;
     }
@@ -178,10 +174,14 @@ struct pipeline {
 };
 
 
-// template <typename T>
-// auto feed(pipeline& p, T x) -> T {
-
-// }
+template <typename T>
+auto feed(pipeline& p, T x) -> T {
+    T r;
+    for (auto& n : p.nodes_) {
+        r = n.call<T>(x);
+    }
+    return r;
+}
 
 
 }  // namespace piperifle
