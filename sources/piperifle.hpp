@@ -28,12 +28,39 @@ struct effect         : std::function<void(void)> {};
 // using toggler = toggle;
 
 
-template <typename F, typename... Args>
-concept transformable =
-    std::invocable<F, Args...>
-    && requires(F&& f, Args&&... args) {
-        !std::is_void_v<decltype(f(std::forward<Args>(args)...))>;
-    };
+template <typename FWrapper>
+concept transformable = requires {
+    requires !std::is_void_v<typename FWrapper::result>;
+    requires 0 < std::tuple_size_v<typename FWrapper::arguments>;
+};
+
+
+template <typename F>
+concept callable_with_info = requires {
+    typename F::result;
+    typename F::arguments;
+};
+
+
+// template <typename...>
+// struct function_with_callinfo
+// {
+//     // using result = void;
+//     using arguments = void;
+// };
+
+template <typename R, typename... Args>
+struct function_with_callinfo
+    : std::function<R(Args...)>
+{
+    using result = R;
+    using arguments = std::tuple<Args...>;
+};
+
+// template <typename R, typename... Args>
+// function_with_callinfo(std::function<R(Args...)>) -> function_with_callinfo<R, Args...>;
+
+
 
 
 
@@ -43,13 +70,36 @@ struct node {
 
     kinds var_;
 
-    template <typename F, typename... Args>
-    node(F&& f) requires transformable<F, Args...>
+    // template <
+    //     typename F
+    //     // typename FWrapper = function_type_<
+    //     //     decltype(&std::decay_t<F>::operator())
+    //     // >
+    // >
+    // node(F&& f)
+    //     // requires transformable<function_type_<
+    //     //     decltype(&std::decay_t<F>::operator())
+    //     // >>
+    //     : var_{
+    //         transformation{
+    //             [f = std::move(f)] (std::any args_hidden) -> std::any
+    //             {
+    //                 using arguments = typename function_type_<decltype(&std::decay_t<F>::operator())>::arguments;
+    //                 auto args = std::any_cast<arguments>(args_hidden);
+    //                 return std::make_tuple(std::apply(f, args));
+    //             }
+    //         }
+    //     }
+    // {}
+
+    node(callable_with_info auto&& f)
         : var_{
             transformation{
-                [f = std::move(f)] (std::any args_hidden) -> std::any {
-                    auto args = std::any_cast<std::tuple<Args...>>(args_hidden);
-                    return f(std::get<Args>(args)...);
+                [f = std::move(f)] (std::any args_hidden) -> std::any
+                {
+                    using arguments = typename decltype(f)::arguments;
+                    auto args = std::any_cast<arguments>(args_hidden);
+                    return std::make_tuple(std::apply(f, args));
                 }
             }
         }
@@ -59,7 +109,12 @@ struct node {
     auto operator() (this node& self, Args&&... args) -> R {
         return std::visit(
             overloaded{
-                [...args = std::move(args)] (transformation& f) -> R { return f(std::forward<Args>(args)...); },
+                [...args = std::move(args)] (transformation& f) -> R
+                {
+                    return std::get<R>(
+                        std::any_cast<std::tuple<R>>(f(std::forward<Args>(args)...))
+                    );
+                }
             },
             self.var_
         );
@@ -75,7 +130,9 @@ struct pipeline {
 
     auto connect(this auto&& self, auto&& other) -> pipeline&
     {
-        self.nodes_.emplace_back(node{std::forward<std::decay_t<decltype(other)>>(other)});
+        // self.nodes_.emplace_back(node{std::forward<std::decay_t<decltype(other)>>(other)});
+        self.nodes_.emplace_back(node{function_with_callinfo{std::function{other}}});
+        return self;
     }
 
     inline auto operator|= (this auto&& self, auto&& other) -> pipeline&
