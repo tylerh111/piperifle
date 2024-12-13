@@ -11,3 +11,18 @@ if not testing_framework.found()
     subdir_done()
 endif
 
+
+test_piperifle_pipe = executable(
+    'test_piperifle_pipe',
+    'test_piperifle_pipe.cpp',
+    dependencies: [
+        libpiperifle_dep,
+        testing_framework,
+    ],
+)
+
+
+test(
+    'test_piperifle_pipe',
+    test_piperifle_pipe,
+)
