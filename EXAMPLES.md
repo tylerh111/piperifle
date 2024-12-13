@@ -610,3 +610,113 @@ the only way the original idea would work is if we specified the type ahead of t
 that is, `piperifle::pipeline<X>` where `X` is the data being passed from one type to the next
 this could be `std::any` which gives us range, but there's still no way of having variadic number of arguments
 
+---
+
+continuing with senders and receivers:
+
+```c++
+auto plumbing = piperifle::plumbing{};
+
+auto pipeline = plumbing.pipeline()
+    | piperifle::next([](...){...})
+    | piperifle::next([](...){...})
+    | piperifle::next([](...){...})
+    | piperifle::next([](...){...})
+    | piperifle::next([](...){...})
+    ;
+
+auto [result] = piperifle::feed(pipeline, ...);
+
+
+// or
+
+auto pipe0 = plumbing.pipeline();
+auto pipe1 = piperifle::next(pipe0, [](...){...});
+auto pipe2 = piperifle::next(pipe1, [](...){...});
+auto pipe3 = piperifle::next(pipe2, [](...){...});
+auto pipe4 = piperifle::next(pipe3, [](...){...});
+auto pipe5 = piperifle::next(pipe4, [](...){...});
+
+auto [result] = piperifle::feed(pipe5, ...);
+```
+
+complex pipeline shapes
+
+```c++
+auto plumbing = piperifle::plumbing{};
+
+auto pipeline = plumbing.pipeline()
+    | piperifle::from(...)
+    | piperifle::then(...)
+    | piperifle::to(...)
+    ...
+    ;
+```
+
+```c++
+
+//================
+// basic
+//================
+
+// transformation
+---a--- : ... then a ...
+
+// read from source (or copy from provided default value)
+a--- : from a ...
+x--- : just x ...  // ?? same as: `from([]{ return x; })`
+
+// write to sink
+---a : ... to a
+
+// effect takes no values and returns no values
+***a*** : ... effect a ...
+
+
+// or deduced by type - using concepts
+---a--- : ... then a ...
+***a*** : ... then a ...
+a--- : then a ...
+---a : ... then a
+
+//================
+// complex
+//================
+
+// join paths
+------a1------- : ... when(... then a1, ... then a2) ...
+   \      /
+    --a2--
+
+// join paths (conditionally) (altname: `when_if`)
+---a1------- : ... once(???, ... then a1, ... then a2) ...
+       /
+---a2--
+
+// `when` is doing the forking, `split` isn't required
+// // execute all paths (altname: `choose_all`)
+// ------a1--- : ... split(then a1, then a2) when|once(...)
+//    \
+//     --a2---
+//
+// // execute subset paths (conditional)
+// ------a1--- : ... choose(???, then a1, then a2) when|once(...)
+//    \
+//     --a2---
+
+// pipeline "variable"
+   x
+   |
+---a--- : ... let(from|just(...) | )
+
+// looping over value (i is the loop var)
+---a--- : ... bulk|loop|then_again(i, a)
+  / \
+  \_/
+
+```
+
+
+
+
+
