@@ -7,4 +7,6 @@
 #mesondefine PIPERIFLE_VERSION_PATCH
 #mesondefine PIPERIFLE_VERSION_TAG
 
+#include <piperifle/pipe.hpp>
+
 #endif  // PIPERIFLE_HPP_

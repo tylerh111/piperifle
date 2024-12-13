@@ -309,13 +309,13 @@ The following is a list of future execution concepts.
 
 The following is a list of future execution channels.
 
-* [ ] Value Channel - capture values which can be piped to a task.
+* [x] Value Channel - capture values which can be piped to a task.
 * [ ] Error channel - capture errors which can be piped to a task.
 * [ ] Flag channel - capture user defined flags (stop execution) which can be piped to a task.
 
 The following is a list of future execution options.
 
-* [ ] Immediate execution - run the pipeline immediately with values.
+* [x] Immediate execution - run the pipeline immediately with values.
 * [ ] Schedule execution - run the pipeline asynchronously via separate threads.
 * [ ] Vectorized execution - allow pipes to parallelize task execution with collections.
 

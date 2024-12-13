@@ -16,3 +16,7 @@ configure_file(
     configuration: libpiperifle_cfg,
     install_dir : get_option('includedir'),
 )
+
+install_headers(
+    'piperifle/pipe.hpp',
+)
