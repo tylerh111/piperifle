@@ -13,80 +13,81 @@
 
 
 namespace piperifle {
-// ---------------------------------------
-// concept sender      = ()       -> X
-// concept receiver    = (Y, ...) -> void
-// concept transformer = (Y, ...) -> X
-// concept effector    = ()       -> void
-// concept toggler     = (Y)      -> bool
-// ---------------------------------------
 
-// template <typename... Args>
-// struct completion_signature
-
-
-
-// template <typename T>
-// concept queryable;
-
-
-template <typename S>
-concept sender =
-    requires (S s) {
-        [] <typename... Args> (Args... args) {
-            auto r = s.run(std::forward<Args>(args)...);
-        }
-    };
-
-// template <typename R>
-// concept receiver = requires {};
-
-
-// template <typename T>
-// concept sender_of {};
-
-// template <typename T>
-// concept receiver_of {};
-
-
-struct pipeline {
-
+struct pipeline
+{
     template <typename... Args>
-    constexpr auto run(Args... args) -> decltype(auto) {
+    constexpr auto run(Args... args) -> decltype(auto)
+    {
         return std::make_tuple(std::forward<Args>(args)...);
     }
-
 };
 
 
 template <typename... Args>
-constexpr auto execute(sender auto pipeline, Args... args) -> decltype(auto) {
+constexpr auto execute(auto pipeline, Args... args) -> decltype(auto)
+{
     return pipeline.run(std::forward<Args>(args)...);
 }
 
 
-template <sender S, typename F>
-struct then_sender_ {
-    S s_;
-    F f_;
+template <typename Orig, typename Task>
+struct then_pipe_connected_
+{
+    using orig_t = Orig;
+    using task_t = Task;
+    orig_t orig;
+    task_t task;
 
     template <typename... Args>
-    constexpr auto run(this auto&& self, Args... args) -> decltype(auto) {
-        auto fargs = self.s_.run(std::forward<Args>(args)...);
-        auto results = std::apply(self.f_, fargs);
-        if constexpr (requires {std::tuple_size<decltype(results)>::value;}) {
-            return results;
+    constexpr auto run(Args... args) -> decltype(auto)
+    {
+        auto taskargs = orig.run(std::forward<Args>(args)...);
+        if constexpr (std::is_void_v<decltype(std::apply(task, taskargs))>) {
+            std::apply(task, taskargs);
+            return;
         } else {
+            auto results = std::apply(task, taskargs);
+            if constexpr (requires {std::tuple_size<decltype(results)>::value;}) {
+                return results;
+            }
             return std::make_tuple(results);
         }
     }
 
 };
 
+template <typename Task>
+struct then_pipe_
+{
+    template <typename Orig>
+    using orig_t = then_pipe_connected_<Orig, Task>;
+    using task_t = Task;
+    task_t task;
 
-template <sender S, typename F>
-constexpr auto then(S s, F f) {
-    return then_sender_<S, F>(std::move(s), std::move(f));
+    template <typename Orig>
+    constexpr auto connect(Orig&& orig) {
+        return then_pipe_connected_<Orig, Task>{std::move(orig), std::move(task)};
+    }
+};
+
+
+template <typename Orig, typename Task>
+constexpr auto then(Orig orig, Task task) -> decltype(auto)
+{
+    return then_pipe_<Task>{std::move(task)}.connect(std::move(orig));
+}
+
+template <typename Task>
+constexpr auto then(Task task) -> decltype(auto)
+{
+    return then_pipe_<Task>{std::move(task)};
+}
+
+template <typename Orig, typename Pipe>
+constexpr auto operator|(Orig&& orig, Pipe&& pipe) -> decltype(auto)
+{
+    return pipe.connect(std::move(orig));
 }
 
 

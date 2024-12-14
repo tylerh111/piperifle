@@ -660,59 +660,104 @@ auto pipeline = plumbing.pipeline()
 //================
 
 // transformation
----a--- : ... then a ...
+---a--- : ... then(a) ...
 
 // read from source (or copy from provided default value)
-a--- : from a ...
-x--- : just x ...  // ?? same as: `from([]{ return x; })`
+a--- : then|from(a) ...
+x--- : just(x) ...  // ?? same as: `then([]{ return x; })`
 
 // write to sink
----a : ... to a
-
-// effect takes no values and returns no values
-***a*** : ... effect a ...
-
+---a : ... then|to(a)
 
 // or deduced by type - using concepts
----a--- : ... then a ...
-***a*** : ... then a ...
-a--- : then a ...
----a : ... then a
+---a--- : ... then(a) ...
+a--- : then(a) ...
+---a : ... then(a)
 
 //================
 // complex
 //================
 
-// join paths
-------a1------- : ... when(... then a1, ... then a2) ...
+// chooses which pipe to run next based on received value
+// chooses based on:
+//  * received value is variant: match type with next pipe
+//  * received value is tuple: split out each value into each next pipe
+//  * otherwise: duplicate the value to each pipe
+------a1------ : ... when|split|choose(then(a1), then(a2)) ...
    \      /
     --a2--
 
-// join paths (conditionally) (altname: `when_if`)
----a1------- : ... once(???, ... then a1, ... then a2) ...
-       /
----a2--
+// ---
 
-// `when` is doing the forking, `split` isn't required
-// // execute all paths (altname: `choose_all`)
-// ------a1--- : ... split(then a1, then a2) when|once(...)
-//    \
-//     --a2---
-//
-// // execute subset paths (conditional)
-// ------a1--- : ... choose(???, then a1, then a2) when|once(...)
-//    \
-//     --a2---
+// choose (variant)
+// a1 is run
+// a2 is not run
+// if T2, pipe stops (if there were a pipe that took T2, then it wouldn't stop)
+// never T3
+--- <T1, T2> ----- a1(T1) --------
+               \             /
+                -- a2(T3) ---
+
+// split (tuple)
+// unlike when, the tuple isn't duplicated across a1, a2
+--- <T1, T2> ----- a1(T1) --------
+               \             /
+                -- a2(T2) ---
+
+// when (otherwise)
+// duplicate value across both a1, a2
+--- <(T1, T2)> ----- a1(T1, T2) --------
+                 \                 /
+                  -- a2(T1, T2) ---
+
+// ---
 
 // pipeline "variable"
-   x
-   |
----a--- : ... let(from|just(...) | )
+// this does not allow for `a1 | ai | a2` where ai does not take `x` (new value)
+// this does not allow for `a1 | ai | a2` where ai does not take `o` (original value)
+// the only way around this is by taking a function
+ x-------
+    \    \
+    |    |
+o---a1---a2---a3 : ...
+
+| ...
+| let(
+    just(x)
+    | then([] (auto o, auto x) { ... return {o, x}; })
+    | then([] (auto o, auto x) { ... return {o, x}; }))
+| a3
+
+
+
+// `*` refers to capturing the value instead of receiving the value
+ x---a1---a2---a3---a4
+     *         *
+    *         *
+o------------- : ...
+
+| ...
+| let([] (auto o) {
+    return just(x)
+        | then([&o] (auto x) { ... return x; })  // a1
+        | then([  ] (auto x) { ... return x; })  // a2
+        | then([&o] (auto x) { ... })  // a3
+    })
+| a3
+
+// ---
 
 // looping over value (i is the loop var)
+// p2300 uses `bulk` which passes a "shape"
 ---a--- : ... bulk|loop|then_again(i, a)
   / \
   \_/
+
+// ---
+
+// effect takes no values and returns no values
+***a*** : ... effect(a) ...
+
 
 ```
 
