@@ -35,7 +35,7 @@ The following describe the diagram notation used below.
 * A `(   )` indicates the pipe operation is contained in the brackets.
 * A `[   ]` represents a subpipeline.
 
-### (WIP) **`piperifle::then`**
+### **`piperifle::then`**
 
 The most common pipe is `then`.
 It takes the previous pipe's output as input and returns the next value in the pipeline.
@@ -279,7 +279,7 @@ meson test    -C build
 
 The following is a list of future execution pipes.
 
-* [ ] Simple pipe - run task from previous task's output: `piperifle::then` (`std::execution::then`).
+* [x] Simple pipe - run task from previous task's output: `piperifle::then` (`std::execution::then`).
 * [ ] Branching pipe - duplicate value to all next tasks: `piperifle::when` (`std::execution::when_all`).
 * [ ] Branching pipe - split value out to next applicable tasks: `piperifle::split` (`std::execution::split`).
 * [ ] Branching pipe - choose task(s) based on value type: `piperifle::choose` (`std::execution::into_variant`).
