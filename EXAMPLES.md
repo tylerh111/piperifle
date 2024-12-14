@@ -694,21 +694,21 @@ a--- : then(a) ...
 // a2 is not run
 // if T2, pipe stops (if there were a pipe that took T2, then it wouldn't stop)
 // never T3
---- <T1, T2> ----- a1(T1) --------
-               \             /
-                -- a2(T3) ---
+--- <T1, T2> ----- a1(T1) -------
+               \            /
+                -- a2(T3) --
 
 // split (tuple)
 // unlike when, the tuple isn't duplicated across a1, a2
---- <T1, T2> ----- a1(T1) --------
-               \             /
-                -- a2(T2) ---
+--- <T1, T2> ----- a1(T1) -------
+               \            /
+                -- a2(T2) --
 
 // when (otherwise)
 // duplicate value across both a1, a2
---- <(T1, T2)> ----- a1(T1, T2) --------
-                 \                 /
-                  -- a2(T1, T2) ---
+--- <(T1, T2)> ----- a1(T1, T2) -------
+                 \                /
+                  -- a2(T1, T2) --
 
 // ---
 
@@ -757,6 +757,11 @@ o------------- : ...
 
 // effect takes no values and returns no values
 ***a*** : ... effect(a) ...
+
+
+// ---
+
+// resource acquisition and de
 
 
 ```

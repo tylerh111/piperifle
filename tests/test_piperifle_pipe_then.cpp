@@ -4,11 +4,11 @@
 
 #include <piperifle.hpp>
 
-#define BOOST_TEST_MODULE test_piperifle_pipe_construction
+#define BOOST_TEST_MODULE test_piperifle_pipe_then
 #include <boost/test/unit_test.hpp>
 
 
-BOOST_AUTO_TEST_CASE(test_piperifle_pipe_construction1)
+BOOST_AUTO_TEST_CASE(test_piperifle_pipe_then1)
 {
     auto pipeline =
         piperifle::pipeline{}
@@ -16,13 +16,12 @@ BOOST_AUTO_TEST_CASE(test_piperifle_pipe_construction1)
         | piperifle::then([] (int x) { return x + 21; })
         ;
 
-    std::println("run pipeline");
     auto [result] = execute(pipeline);
-    std::println("run pipeline (done) | results = {}", result);
+    BOOST_TEST(result == 42);
 }
 
 
-BOOST_AUTO_TEST_CASE(test_piperifle_pipe_construction2)
+BOOST_AUTO_TEST_CASE(test_piperifle_pipe_then2)
 {
     auto pipeline =
         piperifle::pipeline{}
@@ -30,13 +29,12 @@ BOOST_AUTO_TEST_CASE(test_piperifle_pipe_construction2)
         | piperifle::then([] (int x) { return x + 2; })
         ;
 
-    std::println("run pipeline");
     auto [result] = execute(pipeline, 0);
-    std::println("run pipeline (done) | results = {}", result);
+    BOOST_TEST(result == 3);
 }
 
 
-BOOST_AUTO_TEST_CASE(test_piperifle_pipe_construction3)
+BOOST_AUTO_TEST_CASE(test_piperifle_pipe_then3)
 {
     auto pipeline =
         piperifle::pipeline{}
@@ -45,13 +43,12 @@ BOOST_AUTO_TEST_CASE(test_piperifle_pipe_construction3)
         | piperifle::then([] (std::string s) { return std::format("{} magic", s); })
         ;
 
-    std::println("run pipeline");
     auto [result] = execute(pipeline, 0);
-    std::println("run pipeline (done) | results = {}", result);
+    BOOST_TEST_REQUIRE(result == "magic 1 magic");
 }
 
 
-BOOST_AUTO_TEST_CASE(test_piperifle_pipe_construction4)
+BOOST_AUTO_TEST_CASE(test_piperifle_pipe_then4)
 {
     int result = 0;
     int passes = 0;
@@ -59,19 +56,18 @@ BOOST_AUTO_TEST_CASE(test_piperifle_pipe_construction4)
     auto pipeline =
         piperifle::pipeline{}
         | piperifle::then([]                        { return 42; })
-        | piperifle::then([&passes] (int x) mutable { std::println("{}", passes); return x + passes++; })
+        | piperifle::then([&passes] (int x) mutable { return x + passes++; })
         | piperifle::then([&result] (int x) mutable { result = x; })
         ;
 
-    std::println("run pipeline");
     execute(pipeline);
-    std::println("run pipeline (done) | results = {}", result);
+    BOOST_TEST(result == 42);
     execute(pipeline);
-    std::println("run pipeline (done) | results = {}", result);
+    BOOST_TEST(result == 43);
     execute(pipeline);
-    std::println("run pipeline (done) | results = {}", result);
+    BOOST_TEST(result == 44);
     execute(pipeline);
-    std::println("run pipeline (done) | results = {}", result);
+    BOOST_TEST(result == 45);
 
 }
 

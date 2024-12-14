@@ -9,7 +9,7 @@ project(
     ],
 )
 
-subdir('sources')
+subdir('src')
 subdir('tests')
 
 pkg_mod = import('pkgconfig')
@@ -18,6 +18,6 @@ pkg_mod.generate(
     filebase: 'piperifle',
     description: 'Fast Data Plumbing',
     subdirs: 'piperifle',
-    libraries: libpiperifle,
+    # libraries: libpiperifle,
     version: meson.project_version(),
 )

@@ -16,12 +16,13 @@ runtimes:
     - python@3.10.8
 # This is the section where you manage your linters. (https://docs.trunk.io/check/configuration)
 lint:
+  disabled:
+    - prettier
+    - markdownlint
   enabled:
     - clang-format@16.0.3
     - clang-tidy@16.0.3
     - git-diff-check
-    - markdownlint@0.43.0
-    - prettier@3.4.2
     - trufflehog@3.85.0
 actions:
   disabled:

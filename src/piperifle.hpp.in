@@ -1,6 +1,5 @@
-
-#ifndef PIPERIFLE_CONFIG_HPP_
-#define PIPERIFLE_CONFIG_HPP_
+#ifndef PIPERIFLE_HPP_
+#define PIPERIFLE_HPP_
 
 #mesondefine PIPERIFLE_VERSION
 #mesondefine PIPERIFLE_VERSION_MAJOR
@@ -8,4 +7,7 @@
 #mesondefine PIPERIFLE_VERSION_PATCH
 #mesondefine PIPERIFLE_VERSION_TAG
 
-#endif  // PIPERIFLE_CONFIG_HPP_
+#include <piperifle/pipe.hpp>
+#include <piperifle/pipe_then.hpp>
+
+#endif  // PIPERIFLE_HPP_
