@@ -82,7 +82,7 @@ It will propagate the previously sent value to the next pipe.
 ```c++
 // ---(0)--(-(1)-------)--(2)---
 //         (      \--o )
-int immediate /* o */ = 0;
+int immediate = 0;
 auto pipeline =
   piperifle::pipeline{}
   | /* (0) */ piperifle::then([] (int x) { return x + 42; })
@@ -144,8 +144,8 @@ auto pipeline =
   piperifle::pipeline{}
   | /* (0) */ piperifle::split(
       /* (1) */ piperifle::then([] (int         x) { return x + 42; }),
-      /* (3) */ piperifle::then([] (double      y) { return y * 2; })
-      /* (2) */ piperifle::then([] (std::string z) { return std::format("{}, World!", z); }),
+      /* (2) */ piperifle::then([] (double      y) { return y * 2; })
+      /* (3) */ piperifle::then([] (std::string z) { return std::format("{}, World!", z); }),
   )
   ;
 
@@ -174,8 +174,8 @@ auto pipeline =
   piperifle::pipeline{}
   | /* (0) */ piperifle::split(
       /* (1) */ piperifle::then([] (int         x) { return x + 42; }),
-      /* (3) */ piperifle::then([] (double      y) { return y * 2; })
-      /* (2) */ piperifle::then([] (std::string z) { return std::format("{}, World!", z); }),
+      /* (2) */ piperifle::then([] (double      y) { return y * 2; })
+      /* (3) */ piperifle::then([] (std::string z) { return std::format("{}, World!", z); }),
   )
   ;
 
@@ -190,11 +190,9 @@ Essentially, it will start a new pipeline with the variable but still have acces
 The pipeline variable will exist through the pipeline execution so long as the next value is used.
 
 ```c++
-// ---(--(0)       )
-//    ( \--------  )
-//    (         |  )
-//    (         v  )
-//    (  (1)---(2)-)---
+// ---(--(0)--------\   )
+//    (             v   )
+//    (      (1)---(2)--)---
 auto pipeline =
   piperifle::pipeline{}
   | /* (0) */ piperifle::let(
