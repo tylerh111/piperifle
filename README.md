@@ -25,7 +25,19 @@ So long as the value sent by a task can be received by the next task, the connec
   * This serves the same purpose as both "sender"s and "receiver"s in P2300.
     There is no real distinguishing quality between these two concepts in `piperifle`.
 
-#### **`piperifle::then`**
+#### Pipeline Diagram Notation
+
+The following describe the diagram notation used below.
+
+* A `-` or `/\` represent the flow of the pipeline.
+* A `=` indicates the value is duplicated for the next pipe.
+* A `~` represents the flow of pipeline, noting that it is a passthrough.
+* A `(0)` represents one of the pipes in the pipeline.
+* A `*` indicates the value is captured but not an input to the pipe, e.g. a lambda capture.
+* A `(   )` indicates the pipe operation is contained in the brackets.
+* A `[   ]` represents a subpipeline.
+
+### **`piperifle::then`**
 
 The most common pipe is `then`.
 It takes the previous pipe's output as input and returns the next value in the pipeline.
@@ -48,7 +60,7 @@ auto [result] = piperifle::execute(pipeline, 0);
 assert((result == "Hello, World! 42"));
 ```
 
-#### **`piperifle::just`**
+### **`piperifle::just`**
 
 A `just` pipe acts as a source by producing the value that is provided.
 It stores it locally and produced when executed.
@@ -71,7 +83,7 @@ auto [result] = piperifle::execute(pipeline);
 assert((result == "Hello, World! 42"));
 ```
 
-#### **`piperifle::fill`**
+### **`piperifle::fill`**
 
 A `fill` pipe acts as a sink by storing the value at the given address or reference.
 The reference must be alive by the time the pipeline is executed.
@@ -95,7 +107,7 @@ assert((result == "Hello, World! 42"));
 assert((immediate == 42));
 ```
 
-#### **`piperifle::when`**
+### **`piperifle::when`**
 
 A `when` pipe will duplicate (copy) the input values and send them to all provided pipes - the subpipelines.
 The copy is unconditionally, including when only one pipe is captured.
@@ -125,7 +137,7 @@ assert((result1 == 1));
 assert((result2 == 2));
 ```
 
-#### **`piperifle::split`**
+### **`piperifle::split`**
 
 A `split` pipe will separate the input values (e.g. a tuple of values) and send them to provided pipes - the subpipelines.
 Each next pipe will get exactly one value from the input in the order the subpipelines were provided.
@@ -155,7 +167,7 @@ assert((result1 == 6.28));
 assert((result2 == "Hello, World!"));
 ```
 
-#### **`piperifle::choose`**
+### **`piperifle::choose`**
 
 A `choose` pipe will evaluate the input value type (e.g. a variant of types) and select the appropriate pipe - the subpipelines - to run.
 Only one pipe will be chosen per input.
@@ -183,16 +195,16 @@ auto [result] = piperifle::execute(pipeline, "Hello");
 assert((result == 6.28));
 ```
 
-#### **`piperifle::let`**
+### **`piperifle::let`**
 
 A `let` pipe defines a pipeline variable.
 Essentially, it will start a new pipeline with the variable but still have access to the original value.
 The pipeline variable will exist through the pipeline execution so long as the next value is used.
 
 ```c++
-// ---(--(0)--------\   )
-//    (             v   )
-//    (      (1)---(2)--)---
+// ---(--(0)---------      )
+//    (             *      )
+//    (    [--(1)---(2)--]-)---
 auto pipeline =
   piperifle::pipeline{}
   | /* (0) */ piperifle::let(
@@ -210,7 +222,7 @@ auto [result] = piperifle::execute(pipeline, 42);
 assert((result == "Hello, World! 42"));
 ```
 
-#### **`piperifle::bulk`**
+### **`piperifle::bulk`**
 
 A `bulk` pipe implements a looping mechanism into the pipeline.
 The bulk operation depends on shape that dictates how the task is executed.
@@ -235,7 +247,7 @@ assert((results[1] == 2));
 assert((results[2] == 3));
 ```
 
-#### **`piperifle::effect`**
+### **`piperifle::effect`**
 
 An `effect` pipe produces a side effect.
 Tasks may not have arguments or a result.
