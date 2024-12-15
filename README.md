@@ -60,7 +60,7 @@ auto [result] = piperifle::execute(pipeline, 0);
 assert((result == "Hello, World! 42"));
 ```
 
-### **`piperifle::just`**
+### (WIP) **`piperifle::just`**
 
 A `just` pipe acts as a source by producing the value that is provided.
 It stores it locally and produced when executed.
@@ -83,7 +83,7 @@ auto [result] = piperifle::execute(pipeline);
 assert((result == "Hello, World! 42"));
 ```
 
-### **`piperifle::fill`**
+### (WIP) **`piperifle::fill`**
 
 A `fill` pipe acts as a sink by storing the value at the given address or reference.
 The reference must be alive by the time the pipeline is executed.
@@ -107,7 +107,7 @@ assert((result == "Hello, World! 42"));
 assert((immediate == 42));
 ```
 
-### **`piperifle::when`**
+### (WIP) **`piperifle::when`**
 
 A `when` pipe will duplicate (copy) the input values and send them to all provided pipes - the subpipelines.
 The copy is unconditionally, including when only one pipe is captured.
@@ -137,7 +137,7 @@ assert((result1 == 1));
 assert((result2 == 2));
 ```
 
-### **`piperifle::split`**
+### (WIP) **`piperifle::split`**
 
 A `split` pipe will separate the input values (e.g. a tuple of values) and send them to provided pipes - the subpipelines.
 Each next pipe will get exactly one value from the input in the order the subpipelines were provided.
@@ -167,7 +167,7 @@ assert((result1 == 6.28));
 assert((result2 == "Hello, World!"));
 ```
 
-### **`piperifle::choose`**
+### (WIP) **`piperifle::choose`**
 
 A `choose` pipe will evaluate the input value type (e.g. a variant of types) and select the appropriate pipe - the subpipelines - to run.
 Only one pipe will be chosen per input.
@@ -195,7 +195,7 @@ auto [result] = piperifle::execute(pipeline, "Hello");
 assert((result == 6.28));
 ```
 
-### **`piperifle::let`**
+### (WIP) **`piperifle::let`**
 
 A `let` pipe defines a pipeline variable.
 Essentially, it will start a new pipeline with the variable but still have access to the original value.
@@ -222,7 +222,7 @@ auto [result] = piperifle::execute(pipeline, 42);
 assert((result == "Hello, World! 42"));
 ```
 
-### **`piperifle::bulk`**
+### (WIP) **`piperifle::bulk`**
 
 A `bulk` pipe implements a looping mechanism into the pipeline.
 The bulk operation depends on shape that dictates how the task is executed.
@@ -247,7 +247,7 @@ assert((results[1] == 2));
 assert((results[2] == 3));
 ```
 
-### **`piperifle::effect`**
+### (WIP) **`piperifle::effect`**
 
 An `effect` pipe produces a side effect.
 Tasks may not have arguments or a result.
