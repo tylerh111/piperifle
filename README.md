@@ -27,16 +27,232 @@ So long as the value sent by a task can be received by the next task, the connec
 
 #### **`piperifle::then`**
 
-```c++
-// ---(1)---(2)---
-auto pipeline =
-    | piperifle::pipeline{}
-    | /* (1) */ piperifle::then([] (int x) { return x + 10; })
-    | /* (2) */ piperifle::then([] (int x) { return std::format{"Hello, World! {}", x}; })
-    ;
+The most common pipe is `then`.
+It takes the previous pipe's output as input and returns the next value in the pipeline.
+It is equivalent to "transforming".
 
-auto [result] = piperifle::execute(pipeline, 32);
-ASSERT(result == "Hello, World! 42");
+Transformations are `then` pipe tasks that have both input and output.
+Sources are `then` pipe tasks that have no input.
+Sinks are `then` pipe tasks that have no output.
+A task with no input and no output do not do anything; typically this is an error, though it is still permitted.
+
+```c++
+// ---(0)---(1)---
+auto pipeline =
+  piperifle::pipeline{}
+  | /* (0) */ piperifle::then([] (int x) { return x + 42; })
+  | /* (1) */ piperifle::then([] (int x) { return std::format("Hello, World! {}", x); })
+  ;
+
+auto [result] = piperifle::execute(pipeline, 0);
+assert((result == "Hello, World! 42"));
+```
+
+#### **`piperifle::just`**
+
+A `just` pipe acts as a source by producing the value that is provided.
+It stores it locally and produced when executed.
+
+Note, a `just` pipe can appear anywhere in the pipe.
+It will append its value to the list of arguments for the next pipe.
+When it appears that the beginning of the pipeline, it will provide the first and only argument to the next pipe.
+
+```c++
+// ---(0)--(-------(1)-)--(2)---
+//         ( o--/      )
+auto pipeline =
+  piperifle::pipeline{}
+  | /* (0) */ piperifle::then([] (int x) { return x + 4; })
+  | /* (1) */ piperifle::just(2)
+  | /* (2) */ piperifle::then([] (int x, int y) { return std::format("Hello, World! {}{}", x, y); })
+  ;
+
+auto [result] = piperifle::execute(pipeline);
+assert((result == "Hello, World! 42"));
+```
+
+#### **`piperifle::fill`**
+
+A `fill` pipe acts as a sink by storing the value at the given address or reference.
+The reference must be alive by the time the pipeline is executed.
+
+Note, a `fill` pipe can appear anywhere in the pipe.
+It will propagate the previously sent value to the next pipe.
+
+```c++
+// ---(0)--(-(1)-------)--(2)---
+//         (      \--o )
+int immediate /* o */ = 0;
+auto pipeline =
+  piperifle::pipeline{}
+  | /* (0) */ piperifle::then([] (int x) { return x + 42; })
+  | /* (1) */ piperifle::fill(&immediate)
+  | /* (2) */ piperifle::then([] (int x) { return std::format("Hello, World! {}", x); })
+  ;
+
+auto [result] = piperifle::execute(pipeline, 0);
+assert((result == "Hello, World! 42"));
+assert((immediate == 42));
+```
+
+#### **`piperifle::when`**
+
+A `when` pipe will duplicate (copy) the input values and send them to all provided pipes - the subpipelines.
+The copy is unconditionally, including when only one pipe is captured.
+The result of the `when` pipe is the collection of all output values of the subpipelines.
+The subpipelines need not produce the same type.
+
+Note, this is different from `split` and `choose` pipelines.
+All three "branch" the pipeline, but `when` duplicates the input as apposed to separating the input or selecting the next pipes.
+
+```c++
+// ---(-(0)--               --)---
+//    (      \==[--(1)--]==/  )
+//    (      \==[--(2)--]==/  )
+//    (      \==[--(3)--]==/  )
+auto pipeline =
+  piperifle::pipeline{}
+  | /* (0) */ piperifle::when(
+      /* (1) */ piperifle::then([] (int x) { return x + 0; }),
+      /* (2) */ piperifle::then([] (int x) { return x + 1; }),
+      /* (3) */ piperifle::then([] (int x) { return x + 2; })
+  )
+  ;
+
+auto [result1, result2, result3] = piperifle::execute(pipeline, 0);
+assert((result0 == 0));
+assert((result1 == 1));
+assert((result2 == 2));
+```
+
+#### **`piperifle::split`**
+
+A `split` pipe will separate the input values (e.g. a tuple of values) and send them to provided pipes - the subpipelines.
+Each next pipe will get exactly one value from the input in the order the subpipelines were provided.
+The result of the `split` pipe is the collection of all output values of the subpipelines.
+The subpipelines need not produce the same type.
+
+Note, this is different from `when` and `choose` pipelines.
+All three "branch" the pipeline, but `split` separates the multivalued input as apposed to duplicating the input value or selecting the next pipes.
+
+```c++
+// ---(-(0)--               --)---
+//    (      \--[--(1)--]--/  )
+//    (      \--[--(2)--]--/  )
+//    (      \--[--(3)--]--/  )
+auto pipeline =
+  piperifle::pipeline{}
+  | /* (0) */ piperifle::split(
+      /* (1) */ piperifle::then([] (int         x) { return x + 42; }),
+      /* (3) */ piperifle::then([] (double      y) { return y * 2; })
+      /* (2) */ piperifle::then([] (std::string z) { return std::format("{}, World!", z); }),
+  )
+  ;
+
+auto [result1, result2, result3] = piperifle::execute(pipeline, 0, 3.14, "Hello");
+assert((result0 == 42));
+assert((result1 == 6.28));
+assert((result2 == "Hello, World!"));
+```
+
+#### **`piperifle::choose`**
+
+A `choose` pipe will evaluate the input value type (e.g. a variant of types) and select the appropriate pipe - the subpipelines - to run.
+Only one pipe will be chosen per input.
+In the case of a multivalued input, multiple pipes will be run based on each type of each value.
+The result of the `choose` pipe is the collection of all output values of the subpipelines.
+
+Note, this is different from `when` and `split` pipelines.
+All three "branch" the pipeline, but `choose` selects the next pipeline as apposed to duplicating the input value or separating input.
+
+```c++
+// ---(-(0)--               --)---
+//    (      \  [--(1)--]  /  )
+//    (      \  [--(2)--]  /  )
+//    (      \--[--(3)--]--/  )
+auto pipeline =
+  piperifle::pipeline{}
+  | /* (0) */ piperifle::split(
+      /* (1) */ piperifle::then([] (int         x) { return x + 42; }),
+      /* (3) */ piperifle::then([] (double      y) { return y * 2; })
+      /* (2) */ piperifle::then([] (std::string z) { return std::format("{}, World!", z); }),
+  )
+  ;
+
+auto [result] = piperifle::execute(pipeline, "Hello");
+assert((result == 6.28));
+```
+
+#### **`piperifle::let`**
+
+A `let` pipe defines a pipeline variable.
+Essentially, it will start a new pipeline with the variable but still have access to the original value.
+The pipeline variable will exist through the pipeline execution so long as the next value is used.
+
+```c++
+// ---(--(0)       )
+//    ( \--------  )
+//    (         |  )
+//    (         v  )
+//    (  (1)---(2)-)---
+auto pipeline =
+  piperifle::pipeline{}
+  | /* (0) */ piperifle::let(
+    [] (int o) {
+      return
+        piperifle::pipeline{}
+        | /* (1) */ piperifle::just("Hello")
+        | /* (2) */ piperifle::then([&o] (std::string x) { return std::format("{}, World! {}", x, o); })
+        ;
+    }
+  )
+  ;
+
+auto [result] = piperifle::execute(pipeline, 42);
+assert((result == "Hello, World! 42"));
+```
+
+#### **`piperifle::bulk`**
+
+A `bulk` pipe implements a looping mechanism into the pipeline.
+The bulk operation depends on shape that dictates how the task is executed.
+
+Currently, only integral types are considered.
+Other types could be considered in the future, e.g. predicates, arrays, multidimensional arrays, etc.
+
+```c++
+// ---(~~~~~~~~~~~~~)---
+//    (   \         )
+//  n-(-i----(0)--\ )
+//    (       \---/ )
+auto n = 3;
+auto pipeline =
+  piperifle::pipeline{}
+  | /* (0) */ piperifle::bulk(n, [] (int i, std::vector<int>& v) { ++v[i]; })
+  ;
+
+auto [results] = piperifle::execute(pipeline, {0, 1, 2});
+assert((results[0] == 1));
+assert((results[1] == 2));
+assert((results[2] == 3));
+```
+
+#### **`piperifle::effect`**
+
+An `effect` pipe produces a side effect.
+Tasks may not have arguments or a result.
+
+```c++
+// ---(~~~~~)---
+//    ( (0) )
+auto n = 3;
+auto pipeline =
+  piperifle::pipeline{}
+  | /* (0) */ piperifle::effect([] { std::println("debug: here"); })
+  ;
+
+auto [result] = piperifle::execute(pipeline, 42);
+assert((result == 42));
 ```
 
 ## Building
