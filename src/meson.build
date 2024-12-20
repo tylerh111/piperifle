@@ -19,5 +19,6 @@ configure_file(
 
 install_headers(
     'piperifle/pipe.hpp',
+    'piperifle/pipe_just.hpp',
     'piperifle/pipe_then.hpp',
 )

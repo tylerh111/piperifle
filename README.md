@@ -58,7 +58,7 @@ auto [result] = piperifle::execute(pipeline, 0);
 assert((result == "Hello, World! 42"));
 ```
 
-### (WIP) **`piperifle::just`**
+### **`piperifle::just`**
 
 A `just` pipe acts as a source by producing the value that is provided.
 It stores it locally and produced when executed.
@@ -286,7 +286,7 @@ The following is a list of future execution pipes.
 * [ ] Stateful pipe - defined a variable for next task: `piperifle::let` (`std::execution::let_value`).
 * [ ] Bulk operation pipe - run task multiple times: `piperifle::bulk` (`std::execution::bulk`).
 * [ ] Pass-through pipe - run a side effect task: `piperifle::effect` (no equivalent).
-* [ ] Generator pipe - produce a value: `piperifle::just` (`std::execution::just`).
+* [x] Generator pipe - produce a value: `piperifle::just` (`std::execution::just`).
 * [ ] Collector pipe - consume a value: `piperifle::fill` (no equivalent).
 
 The following is a list of future execution tasks.

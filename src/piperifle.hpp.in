@@ -8,6 +8,7 @@
 #mesondefine PIPERIFLE_VERSION_TAG
 
 #include <piperifle/pipe.hpp>
+#include <piperifle/pipe_just.hpp>
 #include <piperifle/pipe_then.hpp>
 
 #endif  // PIPERIFLE_HPP_
