@@ -60,7 +60,7 @@ auto [result] = piperifle::execute(pipeline, 0);
 assert((result == "Hello, World! 42"));
 ```
 
-### (WIP) **`piperifle::just`**
+### **`piperifle::just`**
 
 A `just` pipe acts as a source by producing the value that is provided.
 It stores it locally and produced when executed.
