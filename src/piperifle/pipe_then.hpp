@@ -7,9 +7,10 @@
 #include <utility>
 
 namespace piperifle {
+namespace details {
 
 template <typename Root, typename Task>
-struct then_pipe_connected_
+struct pipe_then_connected_
 {
     using root_t = Root;
     using task_t = Task;
@@ -20,7 +21,6 @@ struct then_pipe_connected_
     constexpr auto execute(Args&&... args) -> decltype(auto)
     {
         auto taskargs = root.execute(std::forward<Args>(args)...);
-        // auto taskargs = execute(root, std::forward<Args>(args)...);
         if constexpr (std::is_void_v<decltype(std::apply(task, taskargs))>) {
             std::apply(task, taskargs);
             return;
@@ -36,29 +36,31 @@ struct then_pipe_connected_
 };
 
 template <typename Task>
-struct then_pipe_
+struct pipe_then_
 {
     template <typename Root>
-    using root_t = then_pipe_connected_<Root, Task>;
+    using root_t = pipe_then_connected_<Root, Task>;
     using task_t = Task;
     task_t task;
 
     template <typename Root>
     constexpr auto connect(Root&& root) {
-        return then_pipe_connected_<Root, Task>{std::move(root), std::move(task)};
+        return pipe_then_connected_<Root, Task>{std::move(root), std::move(task)};
     }
 };
+
+}  // namspace details
 
 template <typename Root, typename Task>
 constexpr auto then(Root&& root, Task&& task) -> decltype(auto)
 {
-    return then_pipe_<Task>{std::move(task)}.connect(std::move(root));
+    return details::pipe_then_<Task>{std::move(task)}.connect(std::move(root));
 }
 
 template <typename Task>
 constexpr auto then(Task&& task) -> decltype(auto)
 {
-    return then_pipe_<Task>{std::move(task)};
+    return details::pipe_then_<Task>{std::move(task)};
 }
 
 }  // namespace piperifle
