@@ -68,6 +68,5 @@ BOOST_AUTO_TEST_CASE(test_piperifle_pipe_then4)
     BOOST_TEST(result == 44);
     execute(pipeline);
     BOOST_TEST(result == 45);
-
 }
 
