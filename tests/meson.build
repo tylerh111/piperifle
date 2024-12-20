@@ -30,6 +30,15 @@ test_piperifle_pipe_then = executable(
     ],
 )
 
+test_piperifle_pipe_just = executable(
+    'test_piperifle_pipe_just',
+    'test_piperifle_pipe_just.cpp',
+    dependencies: [
+        libpiperifle_dep,
+        testing_framework,
+    ],
+)
+
 
 test(
     'test_piperifle_pipe',
@@ -39,4 +48,9 @@ test(
 test(
     'test_piperifle_pipe_then',
     test_piperifle_pipe_then,
+)
+
+test(
+    'test_piperifle_pipe_just',
+    test_piperifle_pipe_just,
 )

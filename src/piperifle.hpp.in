@@ -9,5 +9,6 @@
 
 #include <piperifle/pipe.hpp>
 #include <piperifle/pipe_then.hpp>
+#include <piperifle/pipe_just.hpp>
 
 #endif  // PIPERIFLE_HPP_
