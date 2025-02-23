@@ -361,7 +361,6 @@ def build_test(
 
 
 @task(
-    iterable=["format", "tests", "testargs"],
     optional=["jobs"],
     help={
         "build": f"build directory (default: '{BUILD}')",
@@ -372,11 +371,6 @@ def build_test(
         "reconfigure": f"reconfigure build (default)",
         "wipe": f"wipe build",
         "jobs": f"number of jobs to build with (default: 1)",
-        "dirty": f"allow dirty repository",
-        "formats": f"formats of distributions (options: xztar, bztar, gztar, zip) (default: unspecified)",
-        "suite": f"suite to run",
-        "tests": f"tests to run",
-        "testargs": f"test arguments",
         "should_setup": f"should setup (default)",
         "should_compile": f"should compile (default)",
         "should_dist": f"should dist",
@@ -394,11 +388,6 @@ def build(
     reconfigure: bool = True,
     wipe: bool = False,
     jobs: int | None = 1,
-    dirty: bool = False,
-    formats: list[str] | None = None,
-    suite: str | None = None,
-    tests: list[str] | None = None,
-    testargs: list[str] | None = None,
     should_setup: bool = True,
     should_compile: bool = True,
     should_dist: bool = False,
@@ -426,17 +415,13 @@ def build(
         build_dist(
             c,
             build=build,
-            dirty=dirty,
-            formats=formats,
+            dirty=True,
         )
     if should_test:
         build_test(
             c,
             build=build,
             jobs=jobs,
-            suite=suite,
-            tests=tests,
-            testargs=testargs,
         )
 
 
