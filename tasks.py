@@ -366,7 +366,6 @@ def build_test(
     help={
         "build": f"build directory (default: '{BUILD}')",
         "source": f"source directory (default: '{SOURCE}')",
-        "install": f"installation directory (default: unspecified)",
         "type": f"build type (options: plain, debug (default), debugoptimized, release, minsize, custom)",
         "warnings": f"build warnings (options: 0, 1 (default), 2, 3, everything)",
         "optimization": f"build optimization (options: plain, 0 (default), g, 1, 2, 3, s)",
@@ -380,7 +379,6 @@ def build_test(
         "testargs": f"test arguments",
         "should_setup": f"should setup (default)",
         "should_compile": f"should compile (default)",
-        "should_install": f"should install; may require sudo",
         "should_dist": f"should dist",
         "should_test": f"should test",
     },
@@ -390,7 +388,6 @@ def build(
     *,
     build: Path = BUILD,
     source: Path = SOURCE,
-    install: Path | None = None,
     type: str = "debug",
     warnings: str = "1",
     optimization: str = "0",
@@ -404,11 +401,10 @@ def build(
     testargs: list[str] | None = None,
     should_setup: bool = True,
     should_compile: bool = True,
-    should_install: bool = False,
     should_dist: bool = False,
     should_test: bool = False,
 ):
-    """Setup, compile, install, package, and test code"""
+    """Setup, compile, package, and test code"""
     if should_setup:
         build_setup(
             c,
@@ -425,12 +421,6 @@ def build(
             c,
             build=build,
             jobs=jobs,
-        )
-    if should_install:
-        build_install(
-            c,
-            build=build,
-            install=install,
         )
     if should_dist:
         build_dist(
