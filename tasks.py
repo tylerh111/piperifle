@@ -371,10 +371,8 @@ def build_test(
         "reconfigure": f"reconfigure build (default)",
         "wipe": f"wipe build",
         "jobs": f"number of jobs to build with (default: 1)",
-        "should_setup": f"should setup (default)",
-        "should_compile": f"should compile (default)",
-        "should_dist": f"should dist",
-        "should_test": f"should test",
+        "dist": f"build distribution (default)",
+        "test": f"run tests (default)",
     },
 )
 def build(
@@ -388,36 +386,35 @@ def build(
     reconfigure: bool = True,
     wipe: bool = False,
     jobs: int | None = 1,
-    should_setup: bool = True,
-    should_compile: bool = True,
-    should_dist: bool = False,
-    should_test: bool = False,
+    dist: bool = True,
+    test: bool = True,
 ):
     """Setup, compile, package, and test code"""
-    if should_setup:
-        build_setup(
-            c,
-            build=build,
-            source=source,
-            type=type,
-            warnings=warnings,
-            optimization=optimization,
-            reconfigure=reconfigure,
-            wipe=wipe,
-        )
-    if should_compile:
-        build_compile(
-            c,
-            build=build,
-            jobs=jobs,
-        )
-    if should_dist:
+    build_setup(
+        c,
+        build=build,
+        source=source,
+        type=type,
+        warnings=warnings,
+        optimization=optimization,
+        reconfigure=reconfigure,
+        wipe=wipe,
+    )
+
+    build_compile(
+        c,
+        build=build,
+        jobs=jobs,
+    )
+
+    if dist:
         build_dist(
             c,
             build=build,
             dirty=True,
         )
-    if should_test:
+
+    if test:
         build_test(
             c,
             build=build,
