@@ -275,6 +275,13 @@ meson compile -C build
 meson test    -C build
 ```
 
+[Invoke](https://github.com/pyinvoke/invoke) tasks are also available to build `piperifle`.
+See `tasks.py` for more information.
+
+```bash
+invoke build
+```
+
 ## Roadmap
 
 The following is a list of future execution pipes.
