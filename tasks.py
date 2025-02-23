@@ -324,6 +324,7 @@ def build_dist(
     help={
         "build": f"build directory (default: '{BUILD}')",
         "jobs": f"number of jobs to build with (default: 1)",
+        "rebuild": f"[plumbing] rebuild before running tests",
         "suite": f"suite to run",
         "tests": f"tests to run",
         "testargs": f"test arguments",
@@ -334,6 +335,7 @@ def build_test(
     *,
     build: Path = BUILD,
     jobs: int | None = 1,
+    rebuild: bool = True,
     suite: str | None = None,
     tests: list[str] | None = None,
     testargs: list[str] | None = None,
@@ -352,6 +354,7 @@ def build_test(
             "-C", _strwrap(build),
             *_add_args_if(jobs is None, "-j"),
             *_add_args_if(jobs and jobs > 1, "-j", jobs),
+            *_add_args_if(not rebuild, "--no-rebuild"),
             *_add_args_if(suite, "--suite", _strwrap(suite)),
             *_add_args_if(testargs, "--test-args", _strwrap(",".join(testargs))),
             *_add_args_if(tests, *[_strwrap(test) for test in tests]),
@@ -419,6 +422,7 @@ def build(
             c,
             build=build,
             jobs=jobs,
+            rebuild=False,
         )
 
 
