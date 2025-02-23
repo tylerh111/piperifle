@@ -158,9 +158,9 @@ def lint(c: Context):
     help={
         "build": f"build directory (default: '{BUILD}')",
         "source": f"source directory (default: '{SOURCE}')",
-        "type": f"build type (options: plain, debug (default), debugoptimized, release, minsize, custom)",
-        "warnings": f"build warnings (options: 0, 1 (default), 2, 3, everything)",
-        "optimization": f"build optimization (options: plain, 0 (default), g, 1, 2, 3, s)",
+        "type": f"build type (options: plain, debug, debugoptimized, release, minsize) (default: unspecified)",
+        "warnings": f"build warnings (options: 0, 1, 2, 3, everything) (default: unspecified)",
+        "optimization": f"build optimization (options: plain, 0 , g, 1, 2, 3, s) (default: unspecified)",
         "reconfigure": f"reconfigure build (default)",
         "wipe": f"wipe build",
     }
@@ -170,9 +170,9 @@ def build_setup(
     *,
     build: Path = BUILD,
     source: Path = SOURCE,
-    type: str = "debug",
-    warnings: str = "1",
-    optimization: str = "0",
+    type: str | None = None,
+    warnings: str | None = None,
+    optimization: str | None = None,
     reconfigure: bool = True,
     wipe: bool = False,
 ):
@@ -181,17 +181,17 @@ def build_setup(
     build = Path(build)
     source = Path(source)
 
-    type = type.lower()
-    if type not in ("plain", "debug", "debugoptimized", "release", "minsize", "custom"):
+    type = type.lower() if isinstance(type, str) else None
+    if type not in ("plain", "debug", "debugoptimized", "release", "minsize", None):
         logging.error(f"unknown build type: '{type}'")
 
-    warnings = warnings.lower()
-    if warnings not in ("0", "1", "2", "3", "everything"):
+    warnings = warnings.lower() if isinstance(warnings, str) else None
+    if warnings not in ("0", "1", "2", "3", "everything", None):
         logging.error(f"unknown warning level: '{warnings}'")
         sys.exit(EXIT_CODE_ERROR)
 
-    optimization = warnings.lower()
-    if optimization not in ("plain", "0", "g", "1", "2", "3", "s"):
+    optimization = optimization.lower() if isinstance(optimization, str) else None
+    if optimization not in ("plain", "0", "g", "1", "2", "3", "s", None):
         logging.error(f"unknown optimization level: '{optimization}'")
         sys.exit(EXIT_CODE_ERROR)
 
@@ -201,9 +201,9 @@ def build_setup(
             "setup",
             _strwrap(build),
             _strwrap(source),
-            "--buildtype", type,
-            "--warnlevel", warnings,
-            "--optimization", optimization,
+            *_add_args_if(type, "--buildtype", type),
+            *_add_args_if(warnings, "--warnlevel", warnings),
+            *_add_args_if(optimization, "--optimization", optimization),
             *_add_args_if(reconfigure, "--reconfigure"),
             *_add_args_if(wipe, "--wipe"),
         ]  # fmt: skip
@@ -368,9 +368,9 @@ def build_test(
     help={
         "build": f"build directory (default: '{BUILD}')",
         "source": f"source directory (default: '{SOURCE}')",
-        "type": f"build type (options: plain, debug (default), debugoptimized, release, minsize, custom)",
-        "warnings": f"build warnings (options: 0, 1 (default), 2, 3, everything)",
-        "optimization": f"build optimization (options: plain, 0 (default), g, 1, 2, 3, s)",
+        "type": f"build type (options: plain, debug, debugoptimized, release, minsize) (default: unspecified)",
+        "warnings": f"build warnings (options: 0, 1, 2, 3, everything) (default: unspecified)",
+        "optimization": f"build optimization (options: plain, 0 , g, 1, 2, 3, s) (default: unspecified)",
         "reconfigure": f"reconfigure build (default)",
         "wipe": f"wipe build",
         "jobs": f"number of jobs to build with (default: 1)",
@@ -383,9 +383,9 @@ def build(
     *,
     build: Path = BUILD,
     source: Path = SOURCE,
-    type: str = "debug",
-    warnings: str = "1",
-    optimization: str = "0",
+    type: str | None = None,
+    warnings: str | None = None,
+    optimization: str | None = None,
     reconfigure: bool = True,
     wipe: bool = False,
     jobs: int | None = 1,
