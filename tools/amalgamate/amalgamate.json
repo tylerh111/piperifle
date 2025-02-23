@@ -1,0 +1,10 @@
+{
+	"project": "Data Plumbing",
+	"target": "dist/piperifle.hpp",
+	"sources": [
+		"build/src/piperifle.hpp"
+	],
+	"include_paths": [
+        "src"
+    ]
+}
