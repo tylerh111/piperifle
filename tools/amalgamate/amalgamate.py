@@ -37,7 +37,7 @@ def _preamble_replace(line: str):
 class Amalgamation:
 
     files: list[Path]
-    outdir: Path | None
+    outdirs: list[Path]
     incdirs: list[Path]
     ext: str
     preamble: list[str]
@@ -46,14 +46,14 @@ class Amalgamation:
         _setup_logger(args.log)
 
         self.files = args.files
-        self.outdir = args.outdir
+        self.outdirs = args.outdir
         self.incdirs = args.incdir
         self.ext = args.ext
         self.preamble = []
 
         logging.debug(args)
         logging.info(f"files    = {[p.absolute().as_posix() for p in self.files]}")
-        logging.info(f"outdir   = {None if self.outdir is None else self.outdir.absolute().as_posix()}")
+        logging.info(f"outdirs  = {[p.absolute().as_posix() for p in self.outdirs]}")
         logging.info(f"incdirs  = {[p.absolute().as_posix() for p in self.incdirs]}")
         logging.info(f"preamble = {None if args.preamble is None else args.preamble.absolute().as_posix()}")
 
@@ -62,8 +62,8 @@ class Amalgamation:
             with open(preamble_file, "r") as f:
                 self.preamble = [_preamble_replace(line) for line in f]
 
-        if self.outdir:
-            self.outdir.mkdir(exist_ok=True)
+        for d in self.outdirs:
+            d.mkdir(exist_ok=True)
 
     def generate(self):
         for file in self.files:
@@ -74,14 +74,15 @@ class Amalgamation:
             if self.preamble:
                 amalgamation = self.preamble + amalgamation
 
-            if self.outdir:
-                outfile = self.outdir / file.name
-            else:
-                outfile = file.with_suffix(".".join((file.suffix, self.ext)))
+            for outdir in self.outdirs:
+                if outdir:
+                    outfile = outdir / file.name
+                else:
+                    outfile = file.with_suffix(".".join((file.suffix, self.ext)))
 
-            logging.info(f"writing to   '{outfile}'")
-            with outfile.open("w") as f:
-                f.writelines(amalgamation)
+                logging.info(f"writing to   '{outfile}'")
+                with outfile.open("w") as f:
+                    f.writelines(amalgamation)
 
     def _generate(self, lines: Iterable[str]) -> list[str]:
         amalgamation = []
@@ -133,8 +134,11 @@ def main():
     parser.add_argument(
         "-O",
         "--outdir",
+        action="extend",
+        nargs=1,
         type=Path,
-        help="output directory; default saves files next to source file",
+        default=[],
+        help="output directories; default saves files next to source file",
     )
 
     parser.add_argument(
