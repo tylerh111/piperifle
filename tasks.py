@@ -43,11 +43,12 @@ from invoke import Collection, Context, task
 PROJECT = "piperifle"
 VERSION = "0.0"
 
+ROOT = Path(".")
 BUILD = Path("build")
-SOURCE = Path(".")
+SOURCE = Path("src")
 INSTALL = Path("/usr/local")
-
-WHICH_CLANG_FORMAT = "clang-format"
+TOOLS = Path("tools")
+DIST = Path("dist")
 
 EXIT_CODE_SUCCESS = 0
 EXIT_CODE_ERROR = 1
@@ -157,7 +158,7 @@ def lint(c: Context):
     name="setup",
     help={
         "build": f"build directory (default: '{BUILD}')",
-        "source": f"source directory (default: '{SOURCE}')",
+        "source": f"source directory (default: '{ROOT}')",
         "type": f"build type (options: plain, debug, debugoptimized, release, minsize) (default: unspecified)",
         "warnings": f"build warnings (options: 0, 1, 2, 3, everything) (default: unspecified)",
         "optimization": f"build optimization (options: plain, 0 , g, 1, 2, 3, s) (default: unspecified)",
@@ -169,7 +170,7 @@ def build_setup(
     c: Context,
     *,
     build: Path = BUILD,
-    source: Path = SOURCE,
+    source: Path = ROOT,
     type: str | None = None,
     warnings: str | None = None,
     optimization: str | None = None,
@@ -287,6 +288,7 @@ def build_install(
         "build": f"build directory to create package (default: '{BUILD}')",
         "dirty": f"allow dirty repository",
         "formats": f"formats of distributions (options: xztar, bztar, gztar, zip) (default: unspecified)",
+        "scratch": f"allow meson to run build and test (default)"
     },
 )
 def build_dist(
@@ -295,6 +297,7 @@ def build_dist(
     build: Path = BUILD,
     dirty: bool = False,
     formats: list[str] | None = None,
+    scratch: bool = True,
 ):
     """Build distribution"""
 
@@ -312,6 +315,7 @@ def build_dist(
             "-C", _strwrap(build),
             *_add_args_if(dirty, "--allow-dirty"),
             *_add_args_if(formats, "--formats", _strwrap(",".join(formats))),
+            *_add_args_if(not scratch, "--no-tests")
         ]  # fmt: skip
 
     c.run(_command(meson_dist_cmd))
@@ -367,30 +371,30 @@ def build_test(
     optional=["jobs"],
     help={
         "build": f"build directory (default: '{BUILD}')",
-        "source": f"source directory (default: '{SOURCE}')",
+        "source": f"source directory (default: '{ROOT}')",
         "type": f"build type (options: plain, debug, debugoptimized, release, minsize) (default: unspecified)",
         "warnings": f"build warnings (options: 0, 1, 2, 3, everything) (default: unspecified)",
         "optimization": f"build optimization (options: plain, 0 , g, 1, 2, 3, s) (default: unspecified)",
         "reconfigure": f"reconfigure build (default)",
         "wipe": f"wipe build",
         "jobs": f"number of jobs to build with (default: 1)",
-        "dist": f"build distribution (default)",
         "test": f"run tests (default)",
+        "dist": f"build distribution (default)",
     },
 )
 def build(
     c: Context,
     *,
     build: Path = BUILD,
-    source: Path = SOURCE,
+    source: Path = ROOT,
     type: str | None = None,
     warnings: str | None = None,
     optimization: str | None = None,
     reconfigure: bool = True,
     wipe: bool = False,
     jobs: int | None = 1,
-    dist: bool = True,
     test: bool = True,
+    dist: bool = True,
 ):
     """Setup, compile, package, and test code"""
     build_setup(
@@ -410,13 +414,6 @@ def build(
         jobs=jobs,
     )
 
-    if dist:
-        build_dist(
-            c,
-            build=build,
-            dirty=True,
-        )
-
     if test:
         build_test(
             c,
@@ -424,6 +421,30 @@ def build(
             jobs=jobs,
             rebuild=False,
         )
+
+    if dist:
+        build_dist(
+            c,
+            build=build,
+            dirty=True,
+            scratch=False,
+        )
+
+
+@task
+def amalgamate(c: Context):
+
+    def amalgamate_cmd():
+        return [
+            "python3",
+            TOOLS / "amalgamate" / "amalgamate.py",
+            "--preamble", TOOLS / "amalgamate" / "preamble.hpp",
+            "-I", SOURCE,
+            "-O", DIST,
+            BUILD / SOURCE / "piperifle.hpp",
+        ]  # fmt: skip
+
+    c.run(_command(amalgamate_cmd))
 
 
 @task
@@ -467,3 +488,4 @@ ns.add_collection(ns_release)
 ns.add_task(version)
 ns.add_task(format)
 ns.add_task(lint)
+ns.add_task(amalgamate)
