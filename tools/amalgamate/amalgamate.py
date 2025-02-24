@@ -104,6 +104,7 @@ class Amalgamation:
                     amalgamation.append(f"// {line}")
                     with include_path.open() as f:
                         amalgamation.extend(self._generate(f))
+                    amalgamation.append(f"// {line.strip()} (end)\n")
                 else:
                     amalgamation.append(line)
             else:

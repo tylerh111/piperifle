@@ -54,6 +54,7 @@ inline constexpr auto operator|(Root&& root, Pipe&& pipe) -> decltype(auto)
 }  // namespace piperifle
 
 #endif  // PIPERIFLE_PIPE_THEN_HPP_
+// #include <piperifle/pipe.hpp> (end)
 // #include <piperifle/pipe_just.hpp>
 #ifndef PIPERIFLE_PIPE_JUST_HPP_
 #define PIPERIFLE_PIPE_JUST_HPP_
@@ -108,6 +109,7 @@ constexpr auto just(Value&& value) -> decltype(auto)
 }  // namespace piperifle
 
 #endif  // PIPERIFLE_PIPE_JUST_HPP_
+// #include <piperifle/pipe_just.hpp> (end)
 // #include <piperifle/pipe_then.hpp>
 #ifndef PIPERIFLE_PIPE_THEN_HPP_
 #define PIPERIFLE_PIPE_THEN_HPP_
@@ -177,5 +179,6 @@ constexpr auto then(Task&& task) -> decltype(auto)
 }  // namespace piperifle
 
 #endif  // PIPERIFLE_PIPE_THEN_HPP_
+// #include <piperifle/pipe_then.hpp> (end)
 
 #endif  // PIPERIFLE_HPP_
