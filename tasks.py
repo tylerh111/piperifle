@@ -287,6 +287,7 @@ def build_install(
         "build": f"build directory to create package (default: '{BUILD}')",
         "dirty": f"allow dirty repository",
         "formats": f"formats of distributions (options: xztar, bztar, gztar, zip) (default: unspecified)",
+        "scratch": f"allow meson to run build and test (default)"
     },
 )
 def build_dist(
@@ -295,6 +296,7 @@ def build_dist(
     build: Path = BUILD,
     dirty: bool = False,
     formats: list[str] | None = None,
+    scratch: bool = True,
 ):
     """Build distribution"""
 
@@ -312,6 +314,7 @@ def build_dist(
             "-C", _strwrap(build),
             *_add_args_if(dirty, "--allow-dirty"),
             *_add_args_if(formats, "--formats", _strwrap(",".join(formats))),
+            *_add_args_if(not scratch, "--no-tests")
         ]  # fmt: skip
 
     c.run(_command(meson_dist_cmd))
@@ -374,8 +377,8 @@ def build_test(
         "reconfigure": f"reconfigure build (default)",
         "wipe": f"wipe build",
         "jobs": f"number of jobs to build with (default: 1)",
-        "dist": f"build distribution (default)",
         "test": f"run tests (default)",
+        "dist": f"build distribution (default)",
     },
 )
 def build(
@@ -389,8 +392,8 @@ def build(
     reconfigure: bool = True,
     wipe: bool = False,
     jobs: int | None = 1,
-    dist: bool = True,
     test: bool = True,
+    dist: bool = True,
 ):
     """Setup, compile, package, and test code"""
     build_setup(
@@ -410,19 +413,20 @@ def build(
         jobs=jobs,
     )
 
-    if dist:
-        build_dist(
-            c,
-            build=build,
-            dirty=True,
-        )
-
     if test:
         build_test(
             c,
             build=build,
             jobs=jobs,
             rebuild=False,
+        )
+
+    if dist:
+        build_dist(
+            c,
+            build=build,
+            dirty=True,
+            scratch=False,
         )
 
 
