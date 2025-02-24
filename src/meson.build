@@ -19,6 +19,8 @@ libpiperifle_hdr = custom_target(
         '@SOURCE_ROOT@/tools/amalgamate/amalgamate.py',
         '-O',
         '@SOURCE_ROOT@/dist',
+        '-O',
+        '@OUTDIR@',
         '-I',
         '@CURRENT_SOURCE_DIR@',
         '--preamble',
