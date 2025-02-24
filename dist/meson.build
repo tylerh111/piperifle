@@ -11,12 +11,10 @@ libpiperifle_hdr = custom_target(
         '-I',
         '@SOURCE_ROOT@/src',
         '-O',
-        '@CURRENT_SOURCE_DIR@',
-        '-O',
         '@OUTDIR@',
         '@INPUT@',
     ],
-    build_always_stale: true,
+    build_by_default: false,
     install: true,
     install_dir: get_option('includedir'),
 )
