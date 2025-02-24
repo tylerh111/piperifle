@@ -8,12 +8,17 @@ libpiperifle_inc = include_directories('.')
 
 libpiperifle_hdr = custom_target(
     'amalgamate',
+    input: [
+        'piperifle.hpp.in',
+        'piperifle/pipe_just.hpp',
+        'piperifle/pipe_then.hpp',
+    ],
     output: 'piperifle.hpp',
     command: [
         'python3',
         '@SOURCE_ROOT@/tools/amalgamate/amalgamate.py',
         '-O',
-        '@BUILD_ROOT@/dist',
+        '@SOURCE_ROOT@/dist',
         '-I',
         '@CURRENT_SOURCE_DIR@',
         '--preamble',
