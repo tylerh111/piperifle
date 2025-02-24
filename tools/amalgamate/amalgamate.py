@@ -9,14 +9,19 @@ from pathlib import Path
 from typing import Iterable
 
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="{asctime} [{levelname:<8}] <{funcName}> {message}",
-    style="{",
-)
-
 PATTERN_PRAGMA = re.compile(r"^\s*#\s*pragma\s+once")
 PATTERN_INCLUDE = re.compile(r'^\s*#\s*include\s+(<|")(?P<path>.*)("|>)')
+
+TRACE = logging.DEBUG - 1
+logging.addLevelName(TRACE, "TRACE")
+
+def _setup_logger(level: str):
+    logging.basicConfig(
+        level=level.upper(),
+        format="{asctime} [{levelname:<8}] <{funcName}> {message}",
+        style="{",
+    )
+
 
 class Amalgamation:
 
@@ -27,17 +32,19 @@ class Amalgamation:
     preamble: list[str]
 
     def __init__(self, args):
-        logging.info(args)
+        _setup_logger(args.log)
+
         self.files = args.files
         self.outdir = args.outdir
         self.incdirs = args.incdir
         self.ext = args.ext
         self.preamble = []
 
-        logging.debug(f"files    = {[p.absolute().as_posix() for p in self.files]}")
-        logging.debug(f"outdir   = {self.outdir.absolute().as_posix()}")
-        logging.debug(f"incdirs  = {[p.absolute().as_posix() for p in self.incdirs]}")
-        logging.debug(f"preamble = {args.preamble.absolute().as_posix()}")
+        logging.debug(args)
+        logging.info(f"files    = {[p.absolute().as_posix() for p in self.files]}")
+        logging.info(f"outdir   = {None if self.outdir is None else self.outdir.absolute().as_posix()}")
+        logging.info(f"incdirs  = {[p.absolute().as_posix() for p in self.incdirs]}")
+        logging.info(f"preamble = {None if args.preamble is None else args.preamble.absolute().as_posix()}")
 
         preamble_file = args.preamble
         if preamble_file:
@@ -78,8 +85,8 @@ class Amalgamation:
             if pragma_match:
                 amalgamation.append(f"// {line}")
             elif include_match:
-                logging.debug(f"searched {line.strip()}")
-                logging.debug(f"{len(amalgamation)=}")
+                logging.log(TRACE, f"searched {line.strip()}")
+                logging.log(TRACE, f"{len(amalgamation)=}")
                 include_path = Path(include_match.group("path"))
                 include_path = self._search_include_dirs(include_path)
                 if include_path:
@@ -143,6 +150,15 @@ def main():
         "--preamble",
         type=Path,
         help="preamble code for the amalgamated file",
+    )
+
+    parser.add_argument(
+        "-l",
+        "--log",
+        type=str,
+        choices=["trace", "debug", "info", "warning", "error", "critical"],
+        default="info",
+        help="log level (default 'info')",
     )
 
     amalgamation = Amalgamation(parser.parse_args())
