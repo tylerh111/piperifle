@@ -6,7 +6,27 @@ libpiperifle_cfg.set_quoted('PIPERIFLE_VERSION_MINOR', meson.project_version().s
 
 libpiperifle_inc = include_directories('.')
 
+libpiperifle_hdr = custom_target(
+    'amalgamate',
+    output: 'piperifle.hpp',
+    command: [
+        'python3',
+        '@SOURCE_ROOT@/tools/amalgamate/amalgamate.py',
+        '-O',
+        '@BUILD_ROOT@/dist',
+        '-I',
+        '@CURRENT_SOURCE_DIR@',
+        '--preamble',
+        '@SOURCE_ROOT@/tools/amalgamate/preamble.hpp',
+        '@OUTDIR@/piperifle.hpp',
+    ],
+    build_always_stale: true,
+    install: true,
+    install_dir: get_option('includedir'),
+)
+
 libpiperifle_dep = declare_dependency(
+    sources: libpiperifle_hdr,
     include_directories: libpiperifle_inc,
 )
 
@@ -14,11 +34,4 @@ configure_file(
     input: 'piperifle.hpp.in',
     output: 'piperifle.hpp',
     configuration: libpiperifle_cfg,
-    install_dir : get_option('includedir'),
-)
-
-install_headers(
-    'piperifle/pipe.hpp',
-    'piperifle/pipe_just.hpp',
-    'piperifle/pipe_then.hpp',
 )
