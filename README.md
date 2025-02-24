@@ -328,6 +328,6 @@ The following is a list of future execution options.
 
 The following is a list of other future ideas.
 
-* [ ] Amalgamation of C++ headers.
+* [x] Amalgamation of C++ headers.
 * [ ] Conan support.
 * [ ] Vcpkg support.
