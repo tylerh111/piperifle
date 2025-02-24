@@ -43,11 +43,12 @@ from invoke import Collection, Context, task
 PROJECT = "piperifle"
 VERSION = "0.0"
 
+ROOT = Path(".")
 BUILD = Path("build")
-SOURCE = Path(".")
+SOURCE = Path("src")
 INSTALL = Path("/usr/local")
-
-WHICH_CLANG_FORMAT = "clang-format"
+TOOLS = Path("tools")
+DIST = Path("dist")
 
 EXIT_CODE_SUCCESS = 0
 EXIT_CODE_ERROR = 1
@@ -157,7 +158,7 @@ def lint(c: Context):
     name="setup",
     help={
         "build": f"build directory (default: '{BUILD}')",
-        "source": f"source directory (default: '{SOURCE}')",
+        "source": f"source directory (default: '{ROOT}')",
         "type": f"build type (options: plain, debug, debugoptimized, release, minsize) (default: unspecified)",
         "warnings": f"build warnings (options: 0, 1, 2, 3, everything) (default: unspecified)",
         "optimization": f"build optimization (options: plain, 0 , g, 1, 2, 3, s) (default: unspecified)",
@@ -169,7 +170,7 @@ def build_setup(
     c: Context,
     *,
     build: Path = BUILD,
-    source: Path = SOURCE,
+    source: Path = ROOT,
     type: str | None = None,
     warnings: str | None = None,
     optimization: str | None = None,
@@ -370,7 +371,7 @@ def build_test(
     optional=["jobs"],
     help={
         "build": f"build directory (default: '{BUILD}')",
-        "source": f"source directory (default: '{SOURCE}')",
+        "source": f"source directory (default: '{ROOT}')",
         "type": f"build type (options: plain, debug, debugoptimized, release, minsize) (default: unspecified)",
         "warnings": f"build warnings (options: 0, 1, 2, 3, everything) (default: unspecified)",
         "optimization": f"build optimization (options: plain, 0 , g, 1, 2, 3, s) (default: unspecified)",
@@ -385,7 +386,7 @@ def build(
     c: Context,
     *,
     build: Path = BUILD,
-    source: Path = SOURCE,
+    source: Path = ROOT,
     type: str | None = None,
     warnings: str | None = None,
     optimization: str | None = None,
@@ -431,6 +432,22 @@ def build(
 
 
 @task
+def amalgamate(c: Context):
+
+    def amalgamate_cmd():
+        return [
+            "python3",
+            TOOLS / "amalgamate" / "amalgamate.py",
+            "--preamble", TOOLS / "amalgamate" / "preamble.hpp",
+            "-I", SOURCE,
+            "-O", DIST,
+            BUILD / SOURCE / "piperifle.hpp",
+        ]  # fmt: skip
+
+    c.run(_command(amalgamate_cmd))
+
+
+@task
 def docs_build(c: Context):
     """(not implemented) Build documentation"""
 
@@ -471,3 +488,4 @@ ns.add_collection(ns_release)
 ns.add_task(version)
 ns.add_task(format)
 ns.add_task(lint)
+ns.add_task(amalgamate)
