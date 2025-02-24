@@ -9,6 +9,10 @@ from pathlib import Path
 from typing import Iterable
 
 
+PROJECT = "piperifle"
+VERSION = "0.0"
+URL = "https://github.com/tylerh111/piperifle"
+
 PATTERN_PRAGMA = re.compile(r"^\s*#\s*pragma\s+once")
 PATTERN_INCLUDE = re.compile(r'^\s*#\s*include\s+(<|")(?P<path>.*)("|>)')
 
@@ -21,6 +25,13 @@ def _setup_logger(level: str):
         format="{asctime} [{levelname:<8}] <{funcName}> {message}",
         style="{",
     )
+
+
+def _preamble_replace(line: str):
+    line = line.replace("@PROJECT@", PROJECT)
+    line = line.replace("@VERSION@", VERSION)
+    line = line.replace("@URL@", URL)
+    return line
 
 
 class Amalgamation:
@@ -49,7 +60,7 @@ class Amalgamation:
         preamble_file = args.preamble
         if preamble_file:
             with open(preamble_file, "r") as f:
-                self.preamble = f.readlines()
+                self.preamble = [_preamble_replace(line) for line in f]
 
         if self.outdir:
             self.outdir.mkdir(exist_ok=True)

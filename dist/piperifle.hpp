@@ -1,5 +1,5 @@
-// @PROJECT@ @VERSION@
-// @URL@
+// piperifle 0.0
+// https://github.com/tylerh111/piperifle
 //
 // SPDX-FileCopyrightText: 2024 - present Tyler Hughes
 // SPDX-License-Identifier: MIT
