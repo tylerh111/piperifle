@@ -9,6 +9,7 @@ project(
     ],
 )
 
+subdir('dist')
 subdir('src')
 subdir('tests')
 

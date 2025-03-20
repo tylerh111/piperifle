@@ -1,6 +1,9 @@
 #ifndef PIPERIFLE_PIPE_JUST_HPP_
 #define PIPERIFLE_PIPE_JUST_HPP_
 
+#include <tuple>
+#include <utility>
+
 namespace piperifle {
 namespace details {
 

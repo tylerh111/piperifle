@@ -4,6 +4,9 @@
 ##==============================================================
 
 build/
+dist/**
+!dist/meson.build
+!dist/piperifle.hpp
 
 ##==============================================================
 ## python ignore files
@@ -20,7 +23,6 @@ __pycache__/
 .Python
 build/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/
