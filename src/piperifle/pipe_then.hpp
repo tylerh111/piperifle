@@ -24,9 +24,10 @@ struct pipe_then_connected_
         if constexpr (std::is_void_v<decltype(std::apply(task, taskargs))>) {
             std::apply(task, taskargs);
             return;
-        } else if constexpr (
-            auto results = std::apply(task, taskargs);
-            requires {std::tuple_size<decltype(results)>::value;}) {
+        }
+
+        auto results = std::apply(task, taskargs);
+        if constexpr (requires {std::tuple_size<decltype(results)>::value;}) {
             return results;
         } else {
             return std::make_tuple(results);
